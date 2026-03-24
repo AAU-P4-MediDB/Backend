@@ -12,7 +12,7 @@ public enum PositionType
   System_administrator,
 }
 
-[Table("CUR")]
+[Table("cur")]
 public class CUR
 {
   [Key]
@@ -54,5 +54,5 @@ public class CUR
 
   // Navigation property
   [ForeignKey("Clinic")]
-  public Clinic? ClinicNavigation { get; set; }
+  public CCR? ClinicNavigation { get; set; }
 }

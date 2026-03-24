@@ -1,13 +1,8 @@
-﻿CREATE TYPE position_type AS ENUM (
-    secretary,
-    Nurse,
-    Doctor,
-    Local_administrator,
-    System_administrator,);
+﻿CREATE TYPE position_type AS ENUM ("secretary", "Nurse", "Doctor", "Local_administrator", "System_administrator" );
 
 CREATE TABLE CUR (
                         uuid      UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
-                        email     TEXT           NOT NULL CHECK (LENGTH(email) < 200),
+                        email     TEXT           NOT NULL CHECK (LENGTH(email) < 200) UNIQUE ,
                         password  TEXT           NOT NULL,
                         salt      TEXT           NOT NULL,
                         name      TEXT           NOT NULL CHECK (LENGTH(name) < 1000),

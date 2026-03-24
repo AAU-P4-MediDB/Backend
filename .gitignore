@@ -1,2 +1,19 @@
-﻿.idea
+.idea
 Backend/appsettings.json
+Backend/appsettings.Development.json
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/projectSettingsUpdater.xml
+/contentModel.xml
+/.idea.Backend_p4.iml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+bin
+obj
+Backend_p4.sln

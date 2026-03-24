@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models;
 
-[Table("PR")]
+[Table("pr")]
 public class PR
 {
   [Key]
@@ -70,8 +70,8 @@ public class PR
 
   // Navigation properties
   [ForeignKey("Clinic")]
-  public Clinic? ClinicNavigation { get; set; }
+  public CCR? ClinicNavigation { get; set; }
 
   [ForeignKey("Doctor")]
-  public User? DoctorNavigation { get; set; }
+  public CUR? DoctorNavigation { get; set; }
 }

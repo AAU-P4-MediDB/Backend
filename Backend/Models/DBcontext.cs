@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Backend.Models
 {
-  public class DBcontext : Dbcontext
+  public class DBcontext : DbContext
   {
     public DBcontext(DbContextOptions<DBcontext> options) : base(options)
     {

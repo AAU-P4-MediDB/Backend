@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend.Models;
 
-[Table("CCR")]
+[Table("ccr")]
 public class CCR
 {
   [Key]
