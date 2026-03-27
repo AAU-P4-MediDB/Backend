@@ -1,6 +1,6 @@
 .idea
-Backend/appsettings.json
-Backend/appsettings.Development.json
+appsettings.json
+appsettings.Development.json
 # Default ignored files
 /shelf/
 /workspace.xml

@@ -19,10 +19,20 @@ public class ClinicManagementController : ControllerBase
     [HttpGet("fc")]
     public async Task<ActionResult> FetchClinic([FromBody] FetchClinicRequest request)
     {
-        var community =  _context.Ccr.First(c => c.Email == request.email);
-        Console.WriteLine(community);
+        var clinic =  _context.Ccr.First(c => c.Email == request.email);
+        Console.WriteLine(clinic);
         
-        return Ok(community);
+        return Ok(new
+            {
+                code = ErrorCodes.Success,
+                name = clinic.Name,
+                uuid = clinic.Uuid,
+                location = clinic.Location,
+                email = clinic.Email,
+                phone = clinic.Phone,
+                cvr = clinic.Cvr
+            }
+            );
     }
 
 }

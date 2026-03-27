@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Models.UserManegement;
 
+
 namespace Backend.Controllers
 {
     [ApiController]
@@ -24,17 +25,9 @@ namespace Backend.Controllers
             if (string.IsNullOrWhiteSpace(request.email) ||
                 string.IsNullOrWhiteSpace(request.password) ||
                 string.IsNullOrWhiteSpace(request.name) ||
-                string.IsNullOrWhiteSpace(request.clinic) ||
                 request.phone == 0)
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
-
-            // Validate clinic UUID format
-            if (!Guid.TryParse(request.clinic, out Guid clinicGuid))
-                return BadRequest(new { code = ErrorCodes.User.InvalidFieldFormat, message = "Invalid field type or format." });
-
-            // Check if clinic exists
-            if (await _context.Ccr.FindAsync(clinicGuid) == null)
-                return NotFound(new { code = ErrorCodes.User.ClinicNotFound, message = "Clinic does not exist." });
+            
 
             // Validate email format
             if (!request.email.Contains('@') || !request.email.Contains('.'))
@@ -53,7 +46,7 @@ namespace Backend.Controllers
                     Salt     = string.Empty,
                     Name     = request.name,
                     Phone    = request.phone,
-                    Clinic   = clinicGuid,
+                    Clinic   = request.clinic,
                     Position = request.position,
                     Pfp      = request.pfp
                 };
@@ -73,36 +66,6 @@ namespace Backend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { code = ErrorCodes.App.InternalServerError, message = "Internal server error." });
-            }
-        }
-        
-        //1.1.1
-        // suboptimal
-        [HttpPost("ac/register/bad")]
-        public async Task<ActionResult> UserRegistrationBad([FromBody] UserRegistrationRequest request)
-        {
-            try
-            {
-                var user = new CUR
-                {
-                    Email    = request.email,
-                    Password = request.password,
-                    Salt     = string.Empty,
-                    Name     = request.name,
-                    Phone    = request.phone,
-                    Clinic   = Guid.Parse(request.clinic),
-                    Position = request.position,
-                    Pfp      = request.pfp
-                };
-                
-                _context.Cur.Add(user);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { code = ErrorCodes.Success });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { code = ErrorCodes.Misc.UnknownError, message = "it failed." });
             }
         }
     }
