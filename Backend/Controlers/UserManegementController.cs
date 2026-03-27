@@ -68,5 +68,22 @@ namespace Backend.Controllers
                 return StatusCode(500, new { code = ErrorCodes.App.InternalServerError, message = "Internal server error." });
             }
         }
+        
+        //1.1.2
+        [HttpPost("ac/login")]
+        public async Task<ActionResult> UserLogin([FromBody] UserRegistrationRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.email) ||
+                string.IsNullOrWhiteSpace(request.password)) 
+                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+            
+            var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
+            Console.WriteLine(User);
+            
+            return Ok(new { code = ErrorCodes.Success });
+            
+        }
+        
+        
     }
 }
