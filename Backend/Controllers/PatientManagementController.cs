@@ -7,11 +7,11 @@ namespace Backend.Controllers
 {
   [ApiController]
   [Route("api/pm")]
-  public class PatientManagementControlller : ControllerBase
+  public class PatientManagementController : ControllerBase
   {
     private readonly DBcontext _context;
 
-    public PatientManagementControlller(DBcontext context)
+    public PatientManagementController(DBcontext context)
     {
       _context = context;
     }

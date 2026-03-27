@@ -84,6 +84,47 @@ namespace Backend.Controllers
             
         }
         
-        
+        //1.4
+        [HttpPost("{User}/reset")]
+
+        public async Task<ActionResult> UserPassWordReset([FromBody] UserPassWordResetRequest request,Guid User_ID)
+        {
+            if (string.IsNullOrWhiteSpace(request.email) ||
+                string.IsNullOrWhiteSpace(request.new_pass)) 
+                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+
+            var user = _context.Cur.Find(User_ID);
+
+            user.Password = request.new_pass;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                code = ErrorCodes.Success
+            });
+        }
+
+        //1.3
+        [HttpGet("fetch")]
+
+        public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.email))
+                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+
+            var user = _context.Cur.First(c=>c.Email==request.email);
+
+            return Ok(new
+            {
+                code = ErrorCodes.Success,
+                uuid = user.Uuid,
+                name = user.Name,
+                clinic = user.Clinic,
+                position = user.Position,
+                pfp = user.Pfp,
+                phone = user.Phone
+            });
+        }
     }
 }
