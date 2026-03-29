@@ -31,8 +31,6 @@ public class ClinicManagementController : ControllerBase
                 email = clinic.Email,
                 phone = clinic.Phone,
                 cvr = clinic.Cvr
-            }
-            );
+            });
     }
-
 }
