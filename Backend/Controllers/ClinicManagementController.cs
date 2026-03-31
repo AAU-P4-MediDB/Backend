@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 
@@ -15,6 +15,29 @@ public class ClinicManagementController : ControllerBase
         _context = context;
     }
 
+    //4.1.2
+    [HttpGet("cc")]
+    public async Task<ActionResult> CreateClinic([FromBody] CreateClinicRequest request)
+    {
+        var clinic = new CCR
+        {
+            Name = request.name,
+            Phone = request.phone,
+            Email = request.email,
+            Location = request.location,
+            Cvr = request.cvr,
+        };
+        
+        _context.Ccr.Add(clinic);
+        await _context.SaveChangesAsync();
+        Console.WriteLine(clinic);
+        
+        return Ok(new
+            {
+                code = ErrorCodes.Success,
+            }
+        );
+    }
     //4.1.2
     [HttpGet("fc")]
     public async Task<ActionResult> FetchClinic([FromBody] FetchClinicRequest request)
@@ -33,4 +56,26 @@ public class ClinicManagementController : ControllerBase
                 cvr = clinic.Cvr
             });
     }
+    
+    
+    //4.1.3
+    [HttpGet("dc/{uuid}")]
+    public async Task<ActionResult> RemoveClinic(Guid uuid)
+    {
+        var clinic =  _context.Ccr.Find(uuid);
+        Console.WriteLine(clinic);
+        
+        _context.Ccr.Remove(clinic);
+        await _context.SaveChangesAsync();
+        
+        
+        return Ok(new
+            {
+                code = ErrorCodes.Success,
+            }
+        );
+    }
+    
+    
+
 }
