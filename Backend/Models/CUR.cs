@@ -5,7 +5,7 @@ namespace Backend.Models;
 
 public enum PositionType
 {
-  secretary,
+  Secretary = 1,
   Nurse,
   Doctor,
   Local_administrator,
