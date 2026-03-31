@@ -68,7 +68,6 @@ public class ClinicManagementController : ControllerBase
         _context.Ccr.Remove(clinic);
         await _context.SaveChangesAsync();
         
-        
         return Ok(new
             {
                 code = ErrorCodes.Success,
