@@ -5,9 +5,7 @@ namespace Backend.Models
 {
   public class DBcontext : DbContext
   {
-    public DBcontext(DbContextOptions<DBcontext> options) : base(options)
-    {
-    }
+    public DBcontext(DbContextOptions<DBcontext> options) : base(options){} //why is this empty?
 
     public DbSet<CCR> Ccr { get; set; } = null!;
     public DbSet<CUR> Cur { get; set; } = null!;
