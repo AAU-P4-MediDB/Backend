@@ -18,7 +18,7 @@ public class LocalAdminManagementController : ControllerBase
   
   
   //4.2.1
-  [HttpGet("create")]
+  [HttpPost("create")]
   public async Task<ActionResult> CreateLocalAdmin([FromBody] CreateLocalAdminRequest request)
   {
     var LA = new CUR
@@ -67,7 +67,7 @@ public class LocalAdminManagementController : ControllerBase
   
   
   //4.2.2
-  [HttpGet("{uuid}/del")]
+  [HttpDelete("{uuid}/del")]
   public async Task<ActionResult> RemoveLocalAdmin(Guid uuid)
   {
     var LA =  _context.Cur.Find(uuid);

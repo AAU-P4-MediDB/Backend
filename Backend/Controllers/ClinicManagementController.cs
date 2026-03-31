@@ -16,7 +16,7 @@ public class ClinicManagementController : ControllerBase
     }
 
     //4.1.2
-    [HttpGet("cc")]
+    [HttpPost("cc")]
     public async Task<ActionResult> CreateClinic([FromBody] CreateClinicRequest request)
     {
         var clinic = new CCR
@@ -59,7 +59,7 @@ public class ClinicManagementController : ControllerBase
     
     
     //4.1.3
-    [HttpGet("dc/{uuid}")]
+    [HttpDelete("dc/{uuid}")]
     public async Task<ActionResult> RemoveClinic(Guid uuid)
     {
         var clinic =  _context.Ccr.Find(uuid);
