@@ -39,7 +39,7 @@ public class PR
 
   [Required]
   [Column("weight")]
-  public decimal Weight { get; set; }
+  public float Weight { get; set; }
 
   [Required]
   [Column("height")]

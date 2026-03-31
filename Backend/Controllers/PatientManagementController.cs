@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using System.Runtime.InteropServices;
 
 
 namespace Backend.Controllers
@@ -15,13 +16,66 @@ namespace Backend.Controllers
     {
       _context = context;
     }
-    
-    
-    
-    
-    
-    
-    
+
+    //2.1
+    [HttpPost("reg")]
+        public async Task<ActionResult> PatientRegistration([FromBody] PatientRegistrationRequest request)
+        {
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(request.name) ||
+                string.IsNullOrWhiteSpace(request.pronouns)
+                )
+                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+
+            try
+            {
+                var patient = new PR
+                {
+                    Name     = request.name,
+                    Pronouns = request.pronouns,
+                    Clinic   = request.clinic,
+                    Birthdate = request.birthdate,
+                    Weight = request.weight,
+                    BioGender = request.bioGender,
+                    CprKey = request.cprKey,
+                    Diagnosis = request.diagnosis,
+                    Vitals = request.vitals,
+                    Prescriptions = request.prescriptions,
+                    Pfp      = request.pfp
+                };
+                
+
+                _context.Pr.Add(patient);
+                
+                await _context.SaveChangesAsync();
+                
+
+                return Ok(new { code = ErrorCodes.Success });
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, new { code = ErrorCodes.App.DatabaseWriteFailure, message = "Database write failure." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { code = ErrorCodes.App.InternalServerError, message = "Internal server error." });
+            }
+        }
+
+        //2.2
+        [HttpDelete("{patient}/del")] 
+        
+          public async Task<ActionResult> PatientDelete(Guid patient)
+          {
+            var Patient = _context.Pr.Find(patient);
+
+            _context.Pr.Remove(Patient);
+
+            await _context.SaveChangesAsync();
+                
+            return Ok(new { code = ErrorCodes.Success });
+          }
+          
   }
 }
 
