@@ -104,6 +104,24 @@ namespace Backend.Controllers
                 code = ErrorCodes.Success
             });
         }
+        
+        // 1.2
+        [HttpPost("{User}/del")]
+
+        public async Task<ActionResult> User(Guid User)
+        {
+
+            var user = _context.Cur.Find(User);
+            _context.Cur.Remove(user);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                code = ErrorCodes.Success
+            });
+        }
+        
 
         //1.3
         [HttpGet("fetch")]

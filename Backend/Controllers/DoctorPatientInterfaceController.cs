@@ -152,7 +152,7 @@ namespace Backend.Controllers
       });
     }
     
-    //3.1.5
+    //3.1.6
     [HttpGet("usrfet/info")]
     public async Task<ActionResult> InfoFetching([FromBody] ptdataFetchingRequest request)
     {
@@ -183,7 +183,7 @@ namespace Backend.Controllers
         pfp = user.Pfp
       });
     }
-    //3.1.5
+    //3.1.7
     [HttpGet("usrfet/labresult")]
     public async Task<ActionResult> LabResultFetching([FromBody] ptdataFetchingRequest request)
     {
