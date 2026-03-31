@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 
@@ -54,8 +54,7 @@ public class ClinicManagementController : ControllerBase
                 email = clinic.Email,
                 phone = clinic.Phone,
                 cvr = clinic.Cvr
-            }
-            );
+            });
     }
     
     
