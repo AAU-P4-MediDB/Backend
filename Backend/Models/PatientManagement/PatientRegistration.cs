@@ -9,7 +9,7 @@ public class PatientRegistrationRequest
   public float weight { get; set; }
   public bool bioGender { get; set; }
   public int cprKey { get; set; }
-  public string[] diagnosis { get; set; } = null!;
+  public List<string>? diagnosis { get; set; } = null!;
   public string vitals { get; set; } = null!;
   public string? prescriptions { get; set; }
   public string? pfp { get; set; }
