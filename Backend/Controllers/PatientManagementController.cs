@@ -76,6 +76,22 @@ namespace Backend.Controllers
             return Ok(new { code = ErrorCodes.Success });
           }
           
+          //2.3.2
+          [HttpPost("assignPat/confd")]
+
+          public async Task<ActionResult> PatientAssignment([FromBody] PatientAssignmentRequest request)
+        {
+            var user = _context.Pr.Find(request.uuid_pt);
+
+            user.Doctor = request.uuid_dr;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                code = ErrorCodes.Success
+            });
+        }
   }
 }
 
