@@ -7,6 +7,11 @@ namespace Backend.Models
   {
     public DBcontext(DbContextOptions<DBcontext> options) : base(options){} //why is this empty?
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+      modelBuilder.HasPostgresEnum<PositionType>("position_type");
+    }
+
     public DbSet<CCR> Ccr { get; set; } = null!;
     public DbSet<CUR> Cur { get; set; } = null!;
     public DbSet<PR> Pr { get; set; } = null!;
