@@ -13,4 +13,18 @@ public static class Parser
     
     return bits;
   }
+
+  public static DateOnly Parsebirthdate(int bday)
+  {
+    int day = bday / 10000;             
+    int month = (bday / 100) % 100;     
+    int yearPart = bday % 100;
+
+    int currentYear = DateTime.Today.Year % 100;
+    int century = (yearPart <= currentYear) ? (DateTime.Today.Year / 100) * 100 : (DateTime.Today.Year / 100 - 1) * 100;
+    int year = century + yearPart;
+
+
+    return  new DateOnly(year, month, day);
+  }
 }

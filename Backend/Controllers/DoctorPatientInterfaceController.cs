@@ -21,19 +21,18 @@ namespace Backend.Controllers
     [HttpPost("usrfet/vitals")]
     public async Task<ActionResult> VitalsFetching([FromBody] ptdataFetchingRequest request)
     {
+      
       if (string.IsNullOrWhiteSpace(request.CPR_pt)) 
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
       
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000; 
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
       var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
       
       return Ok(new
@@ -53,14 +52,12 @@ namespace Backend.Controllers
       
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000; 
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
       var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
       
       return Ok(new
@@ -80,14 +77,12 @@ namespace Backend.Controllers
 
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000;
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
 
       return Ok(new
@@ -107,14 +102,12 @@ namespace Backend.Controllers
 
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000;
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
 
       return Ok(new
@@ -134,14 +127,12 @@ namespace Backend.Controllers
 
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000;
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
 
       return Ok(new
@@ -161,14 +152,12 @@ namespace Backend.Controllers
 
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000;
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
 
       return Ok(new
@@ -192,14 +181,12 @@ namespace Backend.Controllers
 
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      int bday = cpr[0];
-      int day = bday / 10000;
-      int month = (bday / 100) % 100;
-      int year = 2000 + (bday % 100);
-      DateOnly dateOnly = new DateOnly(year, month, day);
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      if (user == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
 
       return Ok(new
@@ -209,6 +196,8 @@ namespace Backend.Controllers
         lab_results = user.LabResults
       });
     }
+    
+    
     //3.2.1
     [HttpPost("usrup/{uuid}/vital")]
     public async Task<ActionResult> UpdateVitals(Guid uuid, [FromBody] VitalsUpdateRequest request)
@@ -217,7 +206,6 @@ namespace Backend.Controllers
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
 
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
-
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
@@ -251,7 +239,6 @@ namespace Backend.Controllers
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
 
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
-
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
