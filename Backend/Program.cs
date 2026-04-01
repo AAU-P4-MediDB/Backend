@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,8 +8,13 @@ Console.WriteLine($"Running in {builder.Environment.EnvironmentName} mode");
 
 Console.WriteLine($"Connection string: {builder.Configuration.GetConnectionString("DefaultConnection")}");
 
+
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+dataSourceBuilder.MapEnum<PositionType>("position_type");
+var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddDbContext<DBcontext>(options =>
-  options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+  options.UseNpgsql(dataSource));
 
 builder.Services.AddControllers();
 
