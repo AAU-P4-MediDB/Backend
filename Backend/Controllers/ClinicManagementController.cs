@@ -39,7 +39,7 @@ public class ClinicManagementController : ControllerBase
         );
     }
     //4.1.2
-    [HttpGet("fc")]
+    [HttpPost("fc")]
     public async Task<ActionResult> FetchClinic([FromBody] FetchClinicRequest request)
     {
         var clinic =  _context.Ccr.First(c => c.Email == request.email);

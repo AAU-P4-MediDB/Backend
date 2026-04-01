@@ -18,10 +18,10 @@ namespace Backend.Controllers
     }
     
     //3.1.1
-    [HttpGet("usrfet/vitals")]
+    [HttpPost("usrfet/vitals")]
     public async Task<ActionResult> VitalsFetching([FromBody] ptdataFetchingRequest request)
     {
-      if (string.IsNullOrWhiteSpace(request.CPR_pt))
+      if (string.IsNullOrWhiteSpace(request.CPR_pt)) 
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
       
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
@@ -45,7 +45,7 @@ namespace Backend.Controllers
     }
     
     //3.1.2
-    [HttpGet("usrfet/journal")]
+    [HttpPost("usrfet/journal")]
     public async Task<ActionResult> JournalFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
@@ -72,7 +72,7 @@ namespace Backend.Controllers
     }
     
     //3.1.3
-    [HttpGet("usrfet/prescription")]
+    [HttpPost("usrfet/prescription")]
     public async Task<ActionResult> PrescriptionFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
@@ -99,7 +99,7 @@ namespace Backend.Controllers
     }
 
     //3.1.4
-    [HttpGet("usrfet/diagnosis")]
+    [HttpPost("usrfet/diagnosis")]
     public async Task<ActionResult> DiagnosisFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
@@ -126,7 +126,7 @@ namespace Backend.Controllers
     }
 
     //3.1.5
-    [HttpGet("usrfet/appointment")]
+    [HttpPost("usrfet/appointment")]
     public async Task<ActionResult> AppointmentFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
@@ -153,7 +153,7 @@ namespace Backend.Controllers
     }
     
     //3.1.6
-    [HttpGet("usrfet/info")]
+    [HttpPost("usrfet/info")]
     public async Task<ActionResult> InfoFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
@@ -184,7 +184,7 @@ namespace Backend.Controllers
       });
     }
     //3.1.7
-    [HttpGet("usrfet/labresult")]
+    [HttpPost("usrfet/labresult")]
     public async Task<ActionResult> LabResultFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))

@@ -106,7 +106,7 @@ namespace Backend.Controllers
         }
         
         // 1.2
-        [HttpPost("{User}/del")]
+        [HttpDelete("{User}/del")]
 
         public async Task<ActionResult> User(Guid User)
         {
@@ -124,7 +124,7 @@ namespace Backend.Controllers
         
 
         //1.3
-        [HttpGet("fetch")]
+        [HttpPost("fetch")]
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
         {

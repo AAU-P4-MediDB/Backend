@@ -46,7 +46,7 @@ public class LocalAdminManagementController : ControllerBase
   
   
   //4.2.3
-  [HttpGet("fetch")]
+  [HttpPost("fetch")]
   public async Task<ActionResult> FetchLocalAdmin([FromBody] FetchClinicRequest request)
   {
     var LA =  _context.Cur.First(c => c.Email == request.email);
