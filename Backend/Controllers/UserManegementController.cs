@@ -71,7 +71,7 @@ namespace Backend.Controllers
         
         //1.1.2
         [HttpPost("ac/login")]
-        public async Task<ActionResult> UserLogin([FromBody] UserRegistrationRequest request)
+        public async Task<ActionResult> UserLogin([FromBody] UserLoginRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.email) ||
                 string.IsNullOrWhiteSpace(request.password)) 
