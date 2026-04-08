@@ -15,7 +15,7 @@ public class PermManagementController : ControllerBase
   }
 
 
-  [HttpPut("{uuid}/update")]
+  [HttpPost("{uuid}/update")]
   public async Task<IActionResult> UpdateDrPerms(Guid uuid, [FromBody] UpdateDrPermsRequest request)
   {
     var pr = await _context.Pr.FindAsync(uuid);
@@ -45,7 +45,7 @@ public class PermManagementController : ControllerBase
     });
   }
 
-  [HttpPut("{uuid}/get")]
+  [HttpPost("{uuid}/get")]
   public async Task<IActionResult> FetchDrPerms(Guid uuid)
   {
     var pr = await _context.Pr.FindAsync(uuid);

@@ -493,7 +493,31 @@ namespace Backend.Controllers
         code = ErrorCodes.Success,
         calendar = flattened
       });
-    }    
+    }  
+    
+    // 3.6.2
+    [HttpPost("{uuid}/timeline/update")]
+    public async Task<IActionResult> UpdateTimeline(Guid uuid, [FromBody] TimeLine request)
+    {
+      var user = await _context.Cur.FindAsync(uuid);
+
+      if (user == null)
+        return NotFound();
+
+      user.Timeline.Add(user.Timeline.Count, request);
+
+
+      // IMPORTANT: force EF to detect change
+      _context.Entry(user).Property(p => p.Timeline).IsModified = true;
+
+      await _context.SaveChangesAsync();
+
+      return Ok(new
+      {
+        code = ErrorCodes.Success,
+        message = "Permissions updated",
+      });
+    }
   } 
 }
 
