@@ -493,30 +493,7 @@ namespace Backend.Controllers
         code = ErrorCodes.Success,
         calendar = flattened
       });
-    }
-    
-    
-    //3.4.2 Appointment Creation
-    [HttpPost("create/{uuid}")]
-    public async Task<ActionResult> AptCreation(Guid uuid, [FromBody] CalenderData request)
-    {
-      CalenderData[] aptCreations = await _context.Pr
-        .Where(c => c.Uuid == uuid)
-        .Select(c => new CalenderData {
-          name = c.Name,
-          reason = c.Reason,
-          time = c.Time,
-          pfp = c.Pfp
-        })
-        .ToArrayAsync();
-
-      return Ok(new
-      {
-        code = ErrorCodes.Success,
-      });
-    }
-
-    
+    }    
   } 
 }
 
