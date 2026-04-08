@@ -26,9 +26,14 @@ namespace Backend.Controllers
                 string.IsNullOrWhiteSpace(request.pronouns)
                 )
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+            Guid clinicStaffGuid = await _context.Cur
+                .Where(c => c.Clinic == request.clinic)
+                .Select(c => c.Uuid)
+                .FirstOrDefaultAsync();
 
             try
             {
+                
                 var patient = new PR
                 {
                     Name     = request.name,
@@ -41,7 +46,8 @@ namespace Backend.Controllers
                     Diagnosis = request.diagnosis,
                     Vitals = request.vitals,
                     Prescriptions = request.prescriptions,
-                    Pfp      = request.pfp
+                    Pfp      = request.pfp,
+                    DrPerms = perms.CreateStartPerms(new Guid[] { clinicStaffGuid })
                 };
                 
 

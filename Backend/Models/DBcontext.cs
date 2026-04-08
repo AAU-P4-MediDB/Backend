@@ -10,6 +10,9 @@ namespace Backend.Models
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.HasPostgresEnum<PositionType>("position_type");
+      modelBuilder.Entity<PR>()
+        .Property(p => p.DrPerms)
+        .HasColumnType("json");
     }
 
     public DbSet<CCR> Ccr { get; set; } = null!;

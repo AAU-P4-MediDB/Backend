@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 
 namespace Backend.Models;
 
@@ -74,4 +75,8 @@ public class PR
 
   [ForeignKey("Doctor")]
   public CUR? DoctorNavigation { get; set; }
+  
+  [Column("dr_perms", TypeName = "json")]
+  public Dictionary<Guid, int> DrPerms { get; set; } = new();
 }
+
