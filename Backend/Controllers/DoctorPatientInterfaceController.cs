@@ -505,7 +505,6 @@ namespace Backend.Controllers
         code = ErrorCodes.Success,
         timeline = User.Timeline
       });
-    } 
     }  
     
     // 3.6.2
