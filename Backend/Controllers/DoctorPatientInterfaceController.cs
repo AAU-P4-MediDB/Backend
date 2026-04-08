@@ -439,6 +439,29 @@ namespace Backend.Controllers
 
       return Ok(new { code = ErrorCodes.Success });
     }
+    //3.3 Patient Overview
+    [HttpPost("pf/{doctor_uuid}")]
+
+    public async Task<ActionResult> PatientOverview(Guid doctor_uuid)
+    {
+        Dictionary<string, PatientOverview> temp = new Dictionary<string, PatientOverview>();
+        
+        PatientOverview[] patientOverview = await _context.Pr
+          .Where(c => c.Doctor == doctor_uuid)
+          .Select(c => new PatientOverview {
+              name = c.Name,
+              pronouns = c.Pronouns,
+              birthdate = c.Birthdate,
+              pfp = c.Pfp
+              })
+              .ToArrayAsync();
+
+          return Ok(new
+          {
+            code = ErrorCodes.Success,
+            Data = patientOverview
+          });
+    }
   } 
 }
 
