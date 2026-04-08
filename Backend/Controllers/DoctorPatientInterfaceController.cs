@@ -493,6 +493,19 @@ namespace Backend.Controllers
         code = ErrorCodes.Success,
         calendar = flattened
       });
+    }
+    //3.6.1
+    [HttpPost("{uuid}/timeline/get")]
+    public async Task<ActionResult> TimeLineFetching(Guid uuid)
+    {
+      var User = _context.Cur.Find(uuid);
+
+      return Ok(new
+      {
+        code = ErrorCodes.Success,
+        timeline = User.Timeline
+      });
+    } 
     }  
     
     // 3.6.2
