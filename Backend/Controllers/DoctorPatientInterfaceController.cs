@@ -439,6 +439,37 @@ namespace Backend.Controllers
 
       return Ok(new { code = ErrorCodes.Success });
     }
+    
+    [HttpPost("calendar/sync/{uuid}")]
+
+    public async Task<ActionResult> CalendarFetching(Guid uuid)
+    {
+      // flatten JSON arrays
+      var flattened = new List<object>();
+      
+      // fetch all appointments JSON arrays
+      var dataArr = await _context.Pr
+        .Where(c => c.Doctor == uuid)
+        .Select(c => c.Appointments)
+        .ToListAsync();
+      
+      foreach (var item in dataArr)
+      {
+        if (item != null)
+        {
+          // deserialize JSON array into objects
+          var appointments = JsonSerializer.Deserialize<List<JsonElement>>(item.ToString());
+          if (appointments != null)
+            flattened.AddRange(appointments);
+        }
+      }
+
+      return Ok(new
+      {
+        code = ErrorCodes.Success,
+        calendar = flattened
+      });
+    }
   } 
 }
 
