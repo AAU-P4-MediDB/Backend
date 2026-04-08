@@ -51,6 +51,9 @@ public class CUR
   [Range(0, 99999999)]
   [Column("phone")]
   public int Phone { get; set; }
+  
+  [Column("timeline", TypeName = "json")]
+  public Dictionary<int, TimeLine> Timeline { get; set; }
 
   // Navigation property
   [ForeignKey("Clinic")]

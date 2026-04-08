@@ -13,8 +13,8 @@ namespace Backend.Models
       modelBuilder.Entity<PR>()
         .Property(p => p.DrPerms)
         .HasColumnType("json");
-      modelBuilder.Entity<PR>()
-        .Property(p => p.Appointments)
+      modelBuilder.Entity<CUR>()
+        .Property(p => p.Timeline)
         .HasColumnType("json");
     }
 
