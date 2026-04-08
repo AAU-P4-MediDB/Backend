@@ -13,6 +13,9 @@ namespace Backend.Models
       modelBuilder.Entity<PR>()
         .Property(p => p.DrPerms)
         .HasColumnType("json");
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Appointments)
+        .HasColumnType("json");
     }
 
     public DbSet<CCR> Ccr { get; set; } = null!;
