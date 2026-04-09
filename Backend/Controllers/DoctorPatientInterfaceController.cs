@@ -495,7 +495,7 @@ namespace Backend.Controllers
       });
     }
     //3.6.1
-    [HttpPost("{uuid}/timeline/get")]
+    [HttpGet("{uuid}/timeline/get")]
     public async Task<ActionResult> TimeLineFetching(Guid uuid)
     {
       var User = _context.Cur.Find(uuid);
