@@ -464,7 +464,7 @@ namespace Backend.Controllers
     }
     
     // 3.4.1
-    [HttpPost("calendar/sync/{uuid}")]
+    [HttpGet("calendar/sync/{uuid}")]
 
     public async Task<ActionResult> CalendarFetching(Guid uuid)
     {
