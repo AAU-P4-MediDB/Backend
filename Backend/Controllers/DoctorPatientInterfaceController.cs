@@ -329,32 +329,20 @@ namespace Backend.Controllers
     
     //3.2.5 appointment
     [HttpPost("usrup/{uuid}/appointment")]
-    public async Task<ActionResult> Updateappointment(Guid uuid, [FromBody] AppointmentUpdateRequest request)
+    public async Task<ActionResult> Updateappointment(Guid uuid, [FromBody] CalenderData request)
     {
-      if (request.appointment.ValueKind == JsonValueKind.Undefined)
-        return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
 
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
-      List<JsonElement> List;
-
-      if (string.IsNullOrEmpty(user.Appointments))
-      {
-        List = new List<JsonElement>();
-      }
-      else
-      {
-        List = JsonSerializer.Deserialize<List<JsonElement>>(user.Appointments);
-      }
-
-      // Add new unknown JSON object
-      List.Add(request.appointment);
+ 
 
       // Save back
-      user.Appointments = JsonSerializer.Serialize(List);
+      user.Appointments.Add(request);
+      
+      _context.Entry(user).Property(p => p.Appointments).IsModified = true;
 
       await _context.SaveChangesAsync();
 
@@ -469,29 +457,30 @@ namespace Backend.Controllers
     public async Task<ActionResult> CalendarFetching(Guid uuid)
     {
       // flatten JSON arrays
-      var flattened = new List<object>();
+      List<CalenderData> data = new List<CalenderData>();
       
       // fetch all appointments JSON arrays
       var dataArr = await _context.Pr
         .Where(c => c.Doctor == uuid)
         .Select(c => c.Appointments)
         .ToListAsync();
-      
-      foreach (var item in dataArr)
+      Console.WriteLine(dataArr);
+      foreach (var items in dataArr)
       {
-        if (item != null)
+        foreach (var item in items)
         {
-          // deserialize JSON array into objects
-          var appointments = JsonSerializer.Deserialize<List<JsonElement>>(item.ToString());
-          if (appointments != null)
-            flattened.AddRange(appointments);
+          if (item != null)
+          {
+
+            data.Add(item);
+          }
         }
       }
 
       return Ok(new
       {
         code = ErrorCodes.Success,
-        calendar = flattened
+        calendar = data
       });
     }
     //3.6.1
