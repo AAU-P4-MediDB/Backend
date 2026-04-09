@@ -2,13 +2,13 @@
 
 static class perms
 {
-  public static Dictionary<Guid, int> CreateStartPerms(Guid[] clinicDrGuids)
+  public static Dictionary<string, int> CreateStartPerms(Guid[] clinicDrGuids)
   {
-    Dictionary<Guid, int> temp = new Dictionary<Guid, int>();
+    Dictionary<string, int> temp = new Dictionary<string, int>();
 
     foreach (Guid clinicDrGuid in clinicDrGuids)
     {
-      temp.Add(clinicDrGuid, 0);
+      temp.Add(clinicDrGuid.ToString(), 0);
     }
 
     return temp;
