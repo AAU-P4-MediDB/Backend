@@ -11,6 +11,7 @@ Console.WriteLine($"Connection string: {builder.Configuration.GetConnectionStrin
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
 dataSourceBuilder.MapEnum<PositionType>("position_type");
+dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<DBcontext>(options =>
