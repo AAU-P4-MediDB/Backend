@@ -516,7 +516,7 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound();
 
-      user.Timeline.Add(user.Timeline.Count, request);
+      user.Timeline.Add(request);
 
 
       // IMPORTANT: force EF to detect change

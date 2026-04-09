@@ -23,14 +23,12 @@ public class PermManagementController : ControllerBase
     if (pr == null)
       return NotFound();
 
-    // Ensure dictionary exists
-    if (pr.DrPerms == null)
-      pr.DrPerms = new Dictionary<Guid, int>();
+ 
 
     // Apply updates dynamically
     foreach (var (doctorId, permInt) in request.Updates)
     {
-      pr.DrPerms[doctorId] = permInt; // add or update
+      pr.DrPerms[doctorId.ToString()] = permInt; // add or update
     }
 
     // IMPORTANT: force EF to detect change

@@ -77,6 +77,6 @@ public class PR
   public CUR? DoctorNavigation { get; set; }
   
   [Column("dr_perms", TypeName = "json")]
-  public Dictionary<Guid, int> DrPerms { get; set; } = new();
+  public Dictionary<string, int> DrPerms { get; set; } = new();
 }
 
