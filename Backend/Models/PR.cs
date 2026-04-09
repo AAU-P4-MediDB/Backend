@@ -64,7 +64,7 @@ public class PR
   public string Journal { get; set; } = null!;
 
   [Column("appointments", TypeName = "json")]
-  public string? Appointments { get; set; }
+  public List<CalenderData> Appointments { get; set; }
 
   [Column("lab_results", TypeName = "json")]
   public string? LabResults { get; set; }
