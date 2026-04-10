@@ -43,4 +43,9 @@ public static class Parser
 
     return  new DateOnly(year, month, day);
   }
+  
+  public static string convertToCpr(DateOnly date, int value)
+  {
+    return $"{date:ddMMyy}-{value}";
+  }
 }

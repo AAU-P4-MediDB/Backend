@@ -128,10 +128,25 @@ namespace Backend.Controllers
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
         {
+            CUR user;
             if (string.IsNullOrWhiteSpace(request.email))
-                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+            {
+                try
+                {
+                    user = _context.Cur.Find(request.uuid);
+                }
+                catch
+                {
+                    return BadRequest(new { code = ErrorCodes.User.UserNotFound});
+                }
+                
+            }
+            else { user = _context.Cur.First(c=>c.Email==request.email);}
 
-            var user = _context.Cur.First(c=>c.Email==request.email);
+            if (user == null)
+            {
+                return BadRequest(new { code = ErrorCodes.User.UserNotFound});
+            }
 
             return Ok(new
             {
