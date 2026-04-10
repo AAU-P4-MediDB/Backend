@@ -62,4 +62,54 @@ public class PermManagementController : ControllerBase
     });
   }
 
+  //5.5.3
+  [HttpPost("request")]
+  public async Task<IActionResult> PermsRequest([FromBody] PermRequest request)
+  {
+    int[] cpr = request.pt_cpr.Split('-').Select(int.Parse).ToArray();
+
+    DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
+      
+      
+    var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+    if (user == null)
+      return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
+    
+    user.DrPermRequests.Add(request);
+    
+    _context.Entry(user).Property(p => p.DrPermRequests).IsModified = true;
+    
+    await _context.SaveChangesAsync();
+    
+    return Ok(new { code = ErrorCodes.Success });
+  }
+  
+  
+  // 3.5.4
+  [HttpGet("request/get/{uuid}")]
+  public async Task<IActionResult> FetchDrPermsRequests(Guid uuid)
+  {
+    var dataArr = await _context.Pr
+      .Where(c => c.Doctor == uuid)
+      .Select(c => c.DrPermRequests)
+      .ToListAsync();
+    
+    List<PermRequest> permRequests = new List<PermRequest>();
+
+    foreach (var datas in dataArr)
+    {
+      foreach (var perm in datas)
+      {
+        permRequests.Add(perm);
+      }
+    }
+    
+
+    return Ok(new
+    {
+      code = ErrorCodes.Success,
+      message = "Permissions fetched",
+      dr_perm_requests =  permRequests,
+    });
+  }
 }
