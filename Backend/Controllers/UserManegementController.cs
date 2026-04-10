@@ -128,23 +128,38 @@ namespace Backend.Controllers
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
         {
-
-            if (request.uuid == null)
+            
+            if (!ModelState.IsValid)
             {
-                var user = _context.Cur.Find(request.uuid);
-
-                return Ok(new
-                {
-                    code = ErrorCodes.Success,
-                    uuid = user.Uuid,
-                    name = user.Name,
-                    clinic = user.Clinic,
-                    position = user.Position,
-                    pfp = user.Pfp,
-                    phone = user.Phone
-                });
+                return BadRequest(ModelState);
             }
             
+            if (request.uuid != null)
+            {
+                Guid? parsedUuid = null;
+
+                if (!string.IsNullOrEmpty(request.uuid) && Guid.TryParse(request.uuid, out var guid))
+                {
+                    parsedUuid = guid;
+                    
+                    var user = await _context.Cur
+                        .Where(c => c.Uuid == parsedUuid)
+                        .FirstOrDefaultAsync();
+
+                    return Ok(new
+                    {
+                        code = ErrorCodes.Success,
+                        uuid = user.Uuid,
+                        name = user.Name,
+                        clinic = user.Clinic,
+                        position = user.Position,
+                        pfp = user.Pfp,
+                        phone = user.Phone
+                    });
+                }
+
+                return BadRequest(new {code = ErrorCodes.Misc.InvalidUuidFormat, message = "Invalid uuid format." });
+            } 
             if (request.email != null)
             {
                 var user = await _context.Cur
