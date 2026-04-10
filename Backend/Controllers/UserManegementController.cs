@@ -128,6 +128,12 @@ namespace Backend.Controllers
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
         {
+            
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
             if (request.uuid != null)
             {
                 Guid? parsedUuid = null;
