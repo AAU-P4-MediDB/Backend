@@ -148,17 +148,24 @@ namespace Backend.Controllers
     public async Task<ActionResult> InfoFetching([FromBody] ptdataFetchingRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
-        return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+        return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
 
-      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
+      var parts = request.CPR_pt.Split('-');
 
-      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
+      if (parts.Length != 2 ||
+          !int.TryParse(parts[0], out var cprDatePart) ||
+          !int.TryParse(parts[1], out var cprKey))
+      {
+        return BadRequest(new { code = ErrorCodes.User.InvalidCpr });
+      }
 
+      DateOnly dateOnly = Parser.Parsebirthdate(cprDatePart);
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      var user = await _context.Pr
+        .FirstOrDefaultAsync(c => c.CprKey == cprKey && c.Birthdate == dateOnly);
+
       if (user == null)
-        return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
-
+        return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
       return Ok(new
       {
