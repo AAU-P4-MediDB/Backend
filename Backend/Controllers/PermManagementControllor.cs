@@ -62,7 +62,7 @@ public class PermManagementController : ControllerBase
     });
   }
 
-  //5.5.3
+  //3.5.3
   [HttpPost("request")]
   public async Task<IActionResult> PermsRequest([FromBody] PermRequest request)
   {
