@@ -80,7 +80,7 @@ public class PR
   public Dictionary<string, int> DrPerms { get; set; } = new();
   
 
-  [Column("dr_perms_request", TypeName = "json")]
+  [Column("dr_perms_requests", TypeName = "json")]
   public List<PermRequest> DrPermRequests { get; set; } = new();
 }
 
