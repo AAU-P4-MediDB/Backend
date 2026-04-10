@@ -432,9 +432,8 @@ namespace Backend.Controllers
 
     public async Task<ActionResult> PatientOverview(Guid doctor_uuid)
     {
-        Dictionary<string, PatientOverview> temp = new Dictionary<string, PatientOverview>();
         
-        PatientOverview[] patientOverview = await _context.Pr
+        List<PatientOverview> patientOverview = await _context.Pr
           .Where(c => c.Doctor == doctor_uuid)
           .Select(c => new PatientOverview {
               name = c.Name,
@@ -442,7 +441,7 @@ namespace Backend.Controllers
               birthdate = c.Birthdate,
               pfp = c.Pfp
               })
-              .ToArrayAsync();
+              .ToListAsync();
 
           return Ok(new
           {
