@@ -128,36 +128,41 @@ namespace Backend.Controllers
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
         {
-            CUR user;
-            if (string.IsNullOrWhiteSpace(request.email))
+            if (request.uuid != null)
             {
-                try
-                {
-                    user = _context.Cur.Find(request.uuid);
-                }
-                catch
-                {
-                    return BadRequest(new { code = ErrorCodes.User.UserNotFound});
-                }
-                
-            }
-            else { user = _context.Cur.First(c=>c.Email==request.email);}
+                var user = await _context.Cur
+                    .Where(c => c.Uuid == request.uuid)
+                    .FirstOrDefaultAsync();
 
-            if (user == null)
+                return Ok(new
+                {
+                    code = ErrorCodes.Success,
+                    uuid = user.Uuid,
+                    name = user.Name,
+                    clinic = user.Clinic,
+                    position = user.Position,
+                    pfp = user.Pfp,
+                    phone = user.Phone
+                });
+            } 
+            if (request.email != null)
             {
-                return BadRequest(new { code = ErrorCodes.User.UserNotFound});
-            }
+                var user = await _context.Cur
+                    .Where(c => c.Email == request.email)
+                    .FirstOrDefaultAsync();
 
-            return Ok(new
-            {
-                code = ErrorCodes.Success,
-                uuid = user.Uuid,
-                name = user.Name,
-                clinic = user.Clinic,
-                position = user.Position,
-                pfp = user.Pfp,
-                phone = user.Phone
-            });
+                return Ok(new
+                {
+                    code = ErrorCodes.Success,
+                    uuid = user.Uuid,
+                    name = user.Name,
+                    clinic = user.Clinic,
+                    position = user.Position,
+                    pfp = user.Pfp,
+                    phone = user.Phone
+                });
+            }
+            return BadRequest("No identifier provided");
         }
     }
 }
