@@ -72,6 +72,7 @@
             public const string GenericRegistration  = "7.02";
             public const string UnknownError         = "7.03";
             public const string NotImplemented       = "7.04";
+            public const string InvalidUuidFormat    = "7.05";
         }
     }
 }

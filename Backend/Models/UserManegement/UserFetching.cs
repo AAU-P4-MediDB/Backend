@@ -1,8 +1,6 @@
-namespace Backend.Models
-{
-    public class UserFetchingRequest
-    {
+namespace Backend.Models;
+public class UserFetchingRequest
+{ 
         public string? email { get; set; }
-        public Guid? uuid { get; set; }
-    }
+        public string? uuid { get; set; }
 }

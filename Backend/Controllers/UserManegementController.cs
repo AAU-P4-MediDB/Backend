@@ -130,20 +130,29 @@ namespace Backend.Controllers
         {
             if (request.uuid != null)
             {
-                var user = await _context.Cur
-                    .Where(c => c.Uuid == request.uuid)
-                    .FirstOrDefaultAsync();
+                Guid? parsedUuid = null;
 
-                return Ok(new
+                if (!string.IsNullOrEmpty(request.uuid) && Guid.TryParse(request.uuid, out var guid))
                 {
-                    code = ErrorCodes.Success,
-                    uuid = user.Uuid,
-                    name = user.Name,
-                    clinic = user.Clinic,
-                    position = user.Position,
-                    pfp = user.Pfp,
-                    phone = user.Phone
-                });
+                    parsedUuid = guid;
+                    
+                    var user = await _context.Cur
+                        .Where(c => c.Uuid == parsedUuid)
+                        .FirstOrDefaultAsync();
+
+                    return Ok(new
+                    {
+                        code = ErrorCodes.Success,
+                        uuid = user.Uuid,
+                        name = user.Name,
+                        clinic = user.Clinic,
+                        position = user.Position,
+                        pfp = user.Pfp,
+                        phone = user.Phone
+                    });
+                }
+
+                return BadRequest(new {code = ErrorCodes.Misc.InvalidUuidFormat, message = "Invalid uuid format." });
             } 
             if (request.email != null)
             {
