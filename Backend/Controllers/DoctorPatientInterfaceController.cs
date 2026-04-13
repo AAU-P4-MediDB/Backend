@@ -357,33 +357,15 @@ namespace Backend.Controllers
     }
     //3.2.7 labresult
     [HttpPost("usrup/{uuid}/labresult")]
-    public async Task<ActionResult> Updatelabresult(Guid uuid, [FromBody] LabResultUpdateRequest request)
+    public async Task<ActionResult> Updatelabresult(Guid uuid, [FromBody] LabResults request)
     {
-      if (request.lab_result.ValueKind == JsonValueKind.Undefined)
-        return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
-
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
-      List<JsonElement> List;
-
-      if (string.IsNullOrEmpty(user.LabResults))
-      {
-        List = new List<JsonElement>();
-      }
-      else
-      {
-        List = JsonSerializer.Deserialize<List<JsonElement>>(user.LabResults);
-      }
-
-      // Add new unknown JSON object
-      List.Add(request.lab_result);
-
-      // Save back
-      user.LabResults = JsonSerializer.Serialize(List);
-
+      user.LabResults.Add(request);
+      
       await _context.SaveChangesAsync();
 
       return Ok(new { code = ErrorCodes.Success });

@@ -67,7 +67,7 @@ public class PR
   public List<CalenderData> Appointments { get; set; }
 
   [Column("lab_results", TypeName = "json")]
-  public string? LabResults { get; set; }
+  public List<LabResults> LabResults { get; set; }
 
   // Navigation properties
   [ForeignKey("Clinic")]
