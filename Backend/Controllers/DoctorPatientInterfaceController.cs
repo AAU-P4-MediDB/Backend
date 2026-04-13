@@ -435,7 +435,7 @@ namespace Backend.Controllers
       return Ok(new { code = ErrorCodes.Success });
     }
     //3.3 Patient Overview
-    [HttpPost("pf/{doctor_uuid}")]
+    [HttpGet("pf/{doctor_uuid}")]
 
     public async Task<ActionResult> PatientOverview(Guid doctor_uuid)
     {
