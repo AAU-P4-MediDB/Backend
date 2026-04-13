@@ -23,10 +23,7 @@ public class AppointmentUpdateRequest
   public JsonElement appointment { get; set; }
 }
 
-public class LabResultUpdateRequest
-{
-  public JsonElement lab_result { get; set; }
-}
+
 public class InfoUpdateRequest
 {
   public int cpr_key { get; set; }
