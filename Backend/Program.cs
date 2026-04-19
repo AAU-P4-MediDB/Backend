@@ -44,12 +44,15 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>
         policy.RequireClaim("position", "Doctor"));
+    
+    options.AddPolicy("SecretaryOnly", policy =>
+        policy.RequireClaim("position", "Secretary"));
 
     options.AddPolicy("AdminOnly", policy =>
-        policy.RequireClaim("position", "System_administrator", "Local_administrator"));
+        policy.RequireClaim("position", "SystemAdministrator", "LocalAdministrator"));
 
     options.AddPolicy("ClinicStaff", policy =>
-        policy.RequireClaim("position", "Doctor", "Nurse", "secretary"));
+        policy.RequireClaim("position", "Doctor", "Nurse", "Secretary"));
 });
 
 builder.Services.AddControllers();
