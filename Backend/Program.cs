@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Npgsql;
+using Npgsql.NameTranslation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,7 @@ Console.WriteLine($"Connection string: {builder.Configuration.GetConnectionStrin
 
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
-dataSourceBuilder.MapEnum<PositionType>("position_type");
+dataSourceBuilder.MapEnum<PositionType>("position_type", new NpgsqlSnakeCaseNameTranslator());
 dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
 

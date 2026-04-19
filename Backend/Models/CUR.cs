@@ -5,11 +5,11 @@ namespace Backend.Models;
 
 public enum PositionType
 {
-  secretary,
+  Secretary,
   Nurse,
   Doctor,
-  Local_administrator,
-  System_administrator,
+  LocalAdministrator,
+  SystemAdministrator
 }
 
 [Table("cur")]
