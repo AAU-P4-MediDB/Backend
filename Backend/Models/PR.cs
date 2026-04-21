@@ -14,7 +14,7 @@ public class PR
   [Required]
   [MaxLength(100)]
   [Column("name")]
-  public string Name { get; set; } = null!;
+  public string Name { get; set; } = null!; //encrypt
 
   [Required]
   [Column("birthdate")]
@@ -23,7 +23,7 @@ public class PR
   [Required]
   [Range(0, 9999)]
   [Column("cpr_key")]
-  public int CprKey { get; set; }
+  public int CprKey { get; set; } //encrypt
 
   [Required]
   [Column("bio_gender")]
@@ -47,27 +47,27 @@ public class PR
   public short Height { get; set; }
 
   [Column("diagnosis")]
-  public List<string>? Diagnosis { get; set; }
+  public List<string>? Diagnosis { get; set; } //encrypt
 
   [Required]
   [Column("vitals", TypeName = "json")]
-  public string Vitals { get; set; } = null!;
+  public string Vitals { get; set; } = null!; //encrypt
 
   [Column("prescriptions", TypeName = "json")]
-  public string? Prescriptions { get; set; }
+  public string? Prescriptions { get; set; } //encrypt
 
   [Column("pfp")]
   public string? Pfp { get; set; }
 
   [Required]
   [Column("journal", TypeName = "json")]
-  public string Journal { get; set; } = null!;
+  public string Journal { get; set; } = null!; //encrypt
 
   [Column("appointments", TypeName = "json")]
   public List<CalenderData> Appointments { get; set; }
 
   [Column("lab_results", TypeName = "json")]
-  public List<LabResults> LabResults { get; set; }
+  public List<LabResults> LabResults { get; set; } //encrypt
 
   // Navigation properties
   [ForeignKey("Clinic")]

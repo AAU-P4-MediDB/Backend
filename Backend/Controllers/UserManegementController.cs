@@ -11,12 +11,10 @@ namespace Backend.Controllers
     public class UserManagementController : ControllerBase
     {
         private readonly DBcontext _context;
-        private readonly TokenService _tokenService;
         
-        public UserManagementController(DBcontext context, TokenService tokenService)
+        public UserManagementController(DBcontext context)
         {
             _context = context;
-            _tokenService = tokenService;
         }
         //1.1.1
         // optimal
@@ -38,14 +36,15 @@ namespace Backend.Controllers
             // Check if email already exists
             if (await _context.Cur.AnyAsync(u => u.Email == request.email))
                 return Conflict(new { code = ErrorCodes.User.AlreadyRegistered, message = "User already registered." });
+            string salt = hashing.GenerateSalt();
 
             try
             {
                 var user = new CUR
                 {
                     Email    = request.email,
-                    Password = request.password,
-                    Salt     = string.Empty,
+                    Password = hashing.HashPassword(request.password, salt),
+                    Salt     = salt,
                     Name     = request.name,
                     Phone    = request.phone,
                     Clinic   = request.clinic,
@@ -80,15 +79,21 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
-            
-            var token = _tokenService.GenerateToken(User);
-            
-            return Ok(new
+            if (User == null)
+            {return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });}
+            if (hashing.VerifyPassword(request.password,User.Salt,User.Password))
             {
-                code = ErrorCodes.Success,
-                jwt_token = token
+                return Ok(new
+                {
+                    code = ErrorCodes.Success,
+                });
+            }
+
+            return Unauthorized(new
+            {
+                code = ErrorCodes.User.InvalidCredentials,
             });
-            
+
         }
         
         //1.4
@@ -102,7 +107,7 @@ namespace Backend.Controllers
 
             var user = _context.Cur.Find(User_ID);
 
-            user.Password = request.new_pass;
+            user.Password = hashing.HashPassword(request.new_pass, user.Salt);
 
             await _context.SaveChangesAsync();
 

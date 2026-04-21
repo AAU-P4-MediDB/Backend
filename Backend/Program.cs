@@ -20,30 +20,14 @@ var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<DBcontext>(options =>
     options.UseNpgsql(dataSource));
 
-// JWT
-var jwtKey = builder.Configuration["Jwt:Key"] 
-    ?? throw new InvalidOperationException("JWT key is not configured");
+var aesKey = builder.Configuration["AES_KEY"] 
+             ?? throw new InvalidOperationException("AES key not configured");
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
-            ValidAudience            = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew                = TimeSpan.Zero   // no grace period on expiry
-        };
-    });
 
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
-builder.Services.AddScoped<TokenService>();
+
 
 var app = builder.Build();
 

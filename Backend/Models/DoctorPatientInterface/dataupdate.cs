@@ -16,7 +16,7 @@ public class PrescriptionUpdateRequest
 }
 public class DiagnosesUpdateRequest
 {
-  public string diagnoses { get; set; }
+  public List<string> diagnoses { get; set; }
 }
 public class AppointmentUpdateRequest
 {

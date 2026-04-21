@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using System.Runtime.InteropServices;
+using Backend.Services;
 
 
 namespace Backend.Controllers
@@ -11,10 +12,13 @@ namespace Backend.Controllers
   public class PatientManagementController : ControllerBase
   {
     private readonly DBcontext _context;
+    private readonly string _aesKey;
 
-    public PatientManagementController(DBcontext context)
+    public PatientManagementController(DBcontext context, IConfiguration config)
     {
       _context = context;
+      _aesKey = config["AES_KEY"] 
+                ?? throw new InvalidOperationException("AES key not configured");
     }
 
     //2.1
@@ -36,14 +40,14 @@ namespace Backend.Controllers
                 
                 var patient = new PR
                 {
-                    Name     = request.name,
+                    Name     = AesEncryption.Encrypt(request.name,_aesKey),
                     Pronouns = request.pronouns,
                     Clinic   = request.clinic,
                     Birthdate = request.birthdate,
                     Weight = request.weight,
                     BioGender = request.bioGender,
                     CprKey = request.cprKey,
-                    Diagnosis = request.diagnosis,
+                    Diagnosis = AesEncryption.EncryptList(request.diagnosis, _aesKey),
                     Vitals = request.vitals,
                     Prescriptions = request.prescriptions,
                     Pfp      = request.pfp,
