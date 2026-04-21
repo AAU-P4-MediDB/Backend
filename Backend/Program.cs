@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Backend.Models;
 using Backend.Services;
@@ -24,7 +22,6 @@ var aesKey = builder.Configuration["AES_KEY"]
              ?? throw new InvalidOperationException("AES key not configured");
 
 
-builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -57,9 +54,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
+
+
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();
+
+
 
 app.Run();

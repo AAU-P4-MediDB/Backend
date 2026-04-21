@@ -19,11 +19,13 @@ namespace Backend.Controllers
       _context = context;
       _aesKey = config["AES_KEY"] 
                 ?? throw new InvalidOperationException("AES key not configured");
+      
+      start();
     }
 
     public void start()
     {
-        startup.hashPasswords(_context);
+        startup(_context);
     }
 
     //2.1
