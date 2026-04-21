@@ -1,6 +1,6 @@
 ﻿using Backend.Models;
 
-namespace Backend.Models.UserManegement;
+namespace Backend.Models;
 
 public class UserRegistrationRequest
 {
