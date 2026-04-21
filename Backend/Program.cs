@@ -5,7 +5,6 @@ using System.Text;
 using Backend.Models;
 using Backend.Services;
 using Npgsql;
-using Npgsql.NameTranslation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +13,7 @@ Console.WriteLine($"Connection string: {builder.Configuration.GetConnectionStrin
 
 // Database
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
-dataSourceBuilder.MapEnum<PositionType>("position_type", new NpgsqlSnakeCaseNameTranslator());
+dataSourceBuilder.MapEnum<PositionType>("position_type");
 dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
 
