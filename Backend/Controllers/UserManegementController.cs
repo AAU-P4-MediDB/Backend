@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Backend.Controllers
@@ -91,6 +92,7 @@ namespace Backend.Controllers
             
         }
         
+        
         //1.4
         [HttpPost("{User}/reset")]
 
@@ -112,7 +114,9 @@ namespace Backend.Controllers
             });
         }
         
+        
         // 1.2
+        [Authorize]
         [HttpDelete("{User}/del")]
 
         public async Task<ActionResult> User(Guid User)
@@ -131,6 +135,7 @@ namespace Backend.Controllers
         
 
         //1.3
+        [Authorize]
         [HttpPost("fetch")]
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)
