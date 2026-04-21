@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
-using Backend.Services;
+
 
 
 namespace Backend.Controllers
@@ -11,12 +11,12 @@ namespace Backend.Controllers
     public class UserManagementController : ControllerBase
     {
         private readonly DBcontext _context;
-        private readonly TokenService _tokenService;
+
         
-        public UserManagementController(DBcontext context, TokenService tokenService)
+        public UserManagementController(DBcontext context)
         {
             _context = context;
-            _tokenService = tokenService;
+
         }
         //1.1.1
         // optimal
@@ -80,13 +80,12 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
-            
-            var token = _tokenService.GenerateToken(User);
+
             
             return Ok(new
             {
                 code = ErrorCodes.Success,
-                jwt_token = token
+
             });
             
         }
