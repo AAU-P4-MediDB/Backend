@@ -21,6 +21,11 @@ namespace Backend.Controllers
                 ?? throw new InvalidOperationException("AES key not configured");
     }
 
+    public void start()
+    {
+        startup.hashPasswords(_context);
+    }
+
     //2.1
     [HttpPost("reg")]
         public async Task<ActionResult> PatientRegistration([FromBody] PatientRegistrationRequest request)
