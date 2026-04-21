@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Backend.Models;
-using Backend.Services;
 using Npgsql;
 using Npgsql.NameTranslation;
+
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,43 +21,7 @@ var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<DBcontext>(options =>
     options.UseNpgsql(dataSource));
 
-// JWT
-var jwtKey = builder.Configuration["Jwt:Key"] 
-    ?? throw new InvalidOperationException("JWT key is not configured");
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
-            ValidAudience            = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew                = TimeSpan.Zero   // no grace period on expiry
-        };
-    });
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("DoctorOnly", policy =>
-        policy.RequireClaim("position", "Doctor"));
-    
-    options.AddPolicy("SecretaryOnly", policy =>
-        policy.RequireClaim("position", "Secretary"));
-
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireClaim("position", "SystemAdministrator", "LocalAdministrator"));
-
-    options.AddPolicy("ClinicStaff", policy =>
-        policy.RequireClaim("position", "Doctor", "Nurse", "Secretary"));
-});
-
 builder.Services.AddControllers();
-builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 
@@ -87,8 +51,37 @@ app.Use(async (context, next) =>
     await next();
 });
 
+//Global Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,        // max requests
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+
+    // Specific Rate limit for login
+    options.AddFixedWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = 429;
+});
+
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
+
+app.UseRateLimiter(); // must be before MapControllers
 
 app.MapControllers();
 
