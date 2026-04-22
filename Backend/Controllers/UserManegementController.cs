@@ -85,6 +85,7 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
+        
             return Ok(new
         
             {
