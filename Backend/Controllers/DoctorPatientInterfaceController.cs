@@ -2,11 +2,13 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
-using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Backend.Controllers
 {
+  
+  [Authorize(Policy = "DoctorOnly")]
   [ApiController]
   [Route("api/dpm")]
   public class DoctorPatientInterfaceController : ControllerBase

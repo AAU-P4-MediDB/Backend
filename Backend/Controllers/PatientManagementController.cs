@@ -2,11 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using System.Runtime.InteropServices;
-using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Backend.Controllers
 {
+    [Authorize(Policy = "ClinicStaff")]
   [ApiController]
   [Route("api/pm")]
   public class PatientManagementController : ControllerBase

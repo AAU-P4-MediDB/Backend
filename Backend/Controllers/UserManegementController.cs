@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Microsoft.AspNetCore.RateLimiting;
 using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
+
 
 
 namespace Backend.Controllers
@@ -73,6 +76,7 @@ namespace Backend.Controllers
         }
         
         //1.1.2
+        [EnableRateLimiting("login")]
         [HttpPost("ac/login")]
         public async Task<ActionResult> UserLogin([FromBody] UserLoginRequest request)
         {
@@ -81,22 +85,14 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
-            if (User == null)
-            {return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });}
-            if (hashing.VerifyPassword(request.password,User.Salt,User.Password))
+            return Ok(new
+        
             {
-                return Ok(new
-                {
-                    code = ErrorCodes.Success,
-                });
-            }
-
-            return Unauthorized(new
-            {
-                code = ErrorCodes.User.InvalidCredentials,
+                code = ErrorCodes.Success,
             });
 
         }
+        
         
         //1.4
         [HttpPost("{User}/reset")]
@@ -119,7 +115,9 @@ namespace Backend.Controllers
             });
         }
         
+        
         // 1.2
+        [Authorize]
         [HttpDelete("{User}/del")]
 
         public async Task<ActionResult> User(Guid User)
@@ -138,6 +136,7 @@ namespace Backend.Controllers
         
 
         //1.3
+        [Authorize]
         [HttpPost("fetch")]
 
         public async Task<ActionResult> UserFetching([FromBody] UserFetchingRequest request)

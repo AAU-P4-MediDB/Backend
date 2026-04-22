@@ -1,8 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Backend.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Backend.Models;
 using Backend.Services;
 using Npgsql;
+
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +29,20 @@ var aesKey = builder.Configuration["AES_KEY"]
              ?? throw new InvalidOperationException("AES key not configured");
 
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DoctorOnly", policy =>
+        policy.RequireClaim("position", "Doctor"));
+    
+    options.AddPolicy("SecretaryOnly", policy =>
+        policy.RequireClaim("position", "Secretary"));
+
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("position", "SystemAdministrator", "LocalAdministrator"));
+
+    options.AddPolicy("ClinicStaff", policy =>
+        policy.RequireClaim("position", "Doctor", "Nurse", "Secretary"));
+});
 
 builder.Services.AddControllers();
 
@@ -74,10 +95,37 @@ app.Use(async (context, next) =>
     await next();
 });
 
+//Global Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,        // max requests
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
 
+    // Specific Rate limit for login
+    options.AddFixedWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = 429;
+});
 
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
+
+app.UseRateLimiter(); // must be before MapControllers
 
 app.MapControllers();
 
