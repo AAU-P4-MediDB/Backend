@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Microsoft.AspNetCore.RateLimiting;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 
@@ -13,12 +14,10 @@ namespace Backend.Controllers
     public class UserManagementController : ControllerBase
     {
         private readonly DBcontext _context;
-
         
         public UserManagementController(DBcontext context)
         {
             _context = context;
-
         }
         //1.1.1
         // optimal
@@ -74,6 +73,7 @@ namespace Backend.Controllers
         }
         
         //1.1.2
+        [EnableRateLimiting("login")]
         [HttpPost("ac/login")]
         public async Task<ActionResult> UserLogin([FromBody] UserLoginRequest request)
         {
@@ -82,12 +82,10 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
-
-            
+        
             return Ok(new
             {
                 code = ErrorCodes.Success,
-
             });
             
         }
