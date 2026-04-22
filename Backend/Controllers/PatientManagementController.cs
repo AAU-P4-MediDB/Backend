@@ -20,13 +20,8 @@ namespace Backend.Controllers
       _aesKey = config["AES_KEY"] 
                 ?? throw new InvalidOperationException("AES key not configured");
       
-      start();
     }
-
-    public void start()
-    {
-        startup(_context);
-    }
+    
 
     //2.1
     [HttpPost("reg")]

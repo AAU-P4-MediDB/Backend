@@ -34,17 +34,37 @@ if (app.Environment.IsDevelopment())
 }
 
 // Test database connection
+// using (var scope = app.Services.CreateScope())
+// {
+//     var db = scope.ServiceProvider.GetRequiredService<DBcontext>();
+//     try
+//     {
+//         await db.Database.CanConnectAsync();
+//         Console.WriteLine("Database connection successful");
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"Database connection failed: {ex.Message}");
+//     }
+// }
+
+
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<DBcontext>();
+    var db     = scope.ServiceProvider.GetRequiredService<DBcontext>();
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
     try
     {
         await db.Database.CanConnectAsync();
         Console.WriteLine("Database connection successful");
+
+        await Startup.RunAsync(db, aesKey);
+        Console.WriteLine("Startup tasks complete");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database connection failed: {ex.Message}");
+        Console.WriteLine($"Startup failed: {ex.Message}");
     }
 }
 
