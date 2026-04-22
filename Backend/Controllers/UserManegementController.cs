@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend.Controllers
 {
@@ -68,6 +69,7 @@ namespace Backend.Controllers
         }
         
         //1.1.2
+        [EnableRateLimiting("login")]
         [HttpPost("ac/login")]
         public async Task<ActionResult> UserLogin([FromBody] UserLoginRequest request)
         {
