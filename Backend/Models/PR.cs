@@ -47,7 +47,7 @@ public class PR
   public short Height { get; set; }
 
   [Column("diagnosis")]
-  public List<string>? Diagnosis { get; set; }
+  public List<diagnosis>? Diagnosis { get; set; }
 
   [Required]
   [Column("vitals", TypeName = "json")]

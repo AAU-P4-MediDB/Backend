@@ -308,18 +308,18 @@ namespace Backend.Controllers
     }
     //3.2.4 diagnosis
     [HttpPost("usrup/{uuid}/diagnosis")]
-    public async Task<ActionResult> Updatediagnosis(Guid uuid, [FromBody] DiagnosesUpdateRequest request)
+    public async Task<ActionResult> Updatediagnosis(Guid uuid, [FromBody] diagnosis request)
     {
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
-      List<string> diagnosisList;
+      List<diagnosis> diagnosisList;
 
       if (user.Diagnosis == null || !user.Diagnosis.Any())
       {
-        diagnosisList = new List<string>();
+        diagnosisList = new List<diagnosis>();
       }
       else
       {
@@ -327,7 +327,7 @@ namespace Backend.Controllers
       }
 
       // Add new unknown JSON object
-      diagnosisList.Add(request.diagnoses);
+      diagnosisList.Add(request);
 
       // Save back
       user.Diagnosis = diagnosisList;
