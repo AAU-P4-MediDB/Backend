@@ -54,7 +54,7 @@ public class PR
   public string Vitals { get; set; } = null!;
 
   [Column("prescriptions", TypeName = "json")]
-  public string? Prescriptions { get; set; }
+  public List<presrciptions> Prescriptions { get; set; }
 
   [Column("pfp")]
   public string? Pfp { get; set; }

@@ -11,7 +11,7 @@ public class PatientRegistrationRequest
   public int cprKey { get; set; }
   public List<diagnosis>? diagnosis { get; set; } = null!;
   public string vitals { get; set; } = null!;
-  public string? prescriptions { get; set; }
+  public List<presrciptions> prescriptions { get; set; }
   public string? pfp { get; set; }
 }
  
