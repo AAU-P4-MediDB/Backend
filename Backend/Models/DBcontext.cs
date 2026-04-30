@@ -40,14 +40,7 @@ namespace Backend.Models
       modelBuilder.Entity<CUR>()
         .Property(p => p.Timeline)
         .HasColumnType("json");
-      var birthdateConverter = new ValueConverter<DateOnly, string>(
-        v => AesEncryption.Encrypt(v.ToString("yyyy-MM-dd"), _aesKey),
-        v => DateOnly.Parse(AesEncryption.Decrypt(v, _aesKey))
-      );
-      var intEncryptConverter = new ValueConverter<int, string>(
-        v => AesEncryption.Encrypt(v.ToString(), _aesKey),
-        v => int.Parse(AesEncryption.Decrypt(v, _aesKey))
-      );
+
       
       
       
@@ -58,15 +51,10 @@ namespace Backend.Models
       );
       
       modelBuilder.Entity<PR>()
-        .Property(p => p.CprKey)
-        .HasConversion(intEncryptConverter);
-      
-      modelBuilder.Entity<PR>()
-        .Property(p => p.Birthdate)
-        .HasConversion(birthdateConverter);
-      modelBuilder.Entity<PR>()
         .Property(p => p.Name)
         .HasConversion(EncryptConverter);
+      
+
       
       
     }

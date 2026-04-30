@@ -118,7 +118,8 @@ using (var scope = app.Services.CreateScope())
         await db.Database.CanConnectAsync();
         Console.WriteLine("Database connection successful");
         
-      
+        await Startup.RunAsync(db, aesKey);
+        Console.WriteLine("Startup tasks complete");
     }
     catch (Exception ex)
     {

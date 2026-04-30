@@ -18,12 +18,12 @@ public class PR
 
   [Required]
   [Column("birthdate")]
-  public DateOnly Birthdate { get; set; }
+  public string Birthdate { get; set; }
 
   [Required]
-  [Range(0, 9999)]
+
   [Column("cpr_key")]
-  public int CprKey { get; set; } //encrypt
+  public string CprKey { get; set; } //encrypt
 
   [Required]
   [Column("bio_gender")]
