@@ -17,6 +17,7 @@ public class PermManagementController : ControllerBase
   public PermManagementController(DBcontext context) 
   {
     _context = context;
+    
   }
 
   // 3.5.1

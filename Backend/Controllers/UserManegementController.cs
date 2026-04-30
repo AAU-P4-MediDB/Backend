@@ -21,6 +21,8 @@ namespace Backend.Controllers
             _context = context;
             _tokenService = tokenService;
         }
+        
+        
         //1.1.1
         // optimal
         [HttpPost("ac/register")]
@@ -41,14 +43,15 @@ namespace Backend.Controllers
             // Check if email already exists
             if (await _context.Cur.AnyAsync(u => u.Email == request.email))
                 return Conflict(new { code = ErrorCodes.User.AlreadyRegistered, message = "User already registered." });
+            string salt = hashing.GenerateSalt();
 
             try
             {
                 var user = new CUR
                 {
                     Email    = request.email,
-                    Password = request.password,
-                    Salt     = string.Empty,
+                    Password = hashing.HashPassword(request.password, salt),
+                    Salt     = salt,
                     Name     = request.name,
                     Phone    = request.phone,
                     Clinic   = request.clinic,
@@ -88,11 +91,12 @@ namespace Backend.Controllers
             var token = _tokenService.GenerateToken(User);
         
             return Ok(new
+        
             {
                 code = ErrorCodes.Success,
                 jwt_token = token
             });
-            
+
         }
         
         
@@ -107,7 +111,7 @@ namespace Backend.Controllers
 
             var user = _context.Cur.Find(User_ID);
 
-            user.Password = request.new_pass;
+            user.Password = hashing.HashPassword(request.new_pass, user.Salt);
 
             await _context.SaveChangesAsync();
 

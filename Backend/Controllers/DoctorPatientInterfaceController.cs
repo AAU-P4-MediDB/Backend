@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 
 
@@ -14,10 +15,13 @@ namespace Backend.Controllers
   public class DoctorPatientInterfaceController : ControllerBase
   {
     private readonly DBcontext _context;
+    private readonly string _aesKey;
 
-    public DoctorPatientInterfaceController(DBcontext context)
+    public DoctorPatientInterfaceController(DBcontext context, IConfiguration config)
     {
       _context = context;
+      _aesKey = config["AES_KEY"] 
+                ?? throw new InvalidOperationException("AES key not configured");
     }
     
     //3.1.1
@@ -117,7 +121,7 @@ namespace Backend.Controllers
       {
         code = ErrorCodes.Success,
         uuid = user.Uuid,
-        diagnosis = user.Diagnosis
+        diagnosis = AesEncryption.DecryptList(user.Diagnosis, _aesKey)
       });
     }
 
@@ -174,7 +178,7 @@ namespace Backend.Controllers
       {
         code = ErrorCodes.Success,
         uuid = user.Uuid,
-        name = user.Name,
+        name = AesEncryption.Decrypt(user.Name, _aesKey),
         pronouns = user.Pronouns,
         bday = user.Birthdate,
         biosex = user.BioGender,
@@ -324,8 +328,10 @@ namespace Backend.Controllers
         diagnosisList = user.Diagnosis;
       }
 
+      var temp = AesEncryption.DecryptList(request.diagnoses, _aesKey);
+
       // Add new unknown JSON object
-      diagnosisList.Add(request);
+      diagnosisList.AddRange(temp);
 
       // Save back
       user.Diagnosis = diagnosisList;
@@ -426,7 +432,7 @@ namespace Backend.Controllers
         List<PatientOverview> patientOverview = await _context.Pr
           .Where(c => c.Doctor == doctor_uuid)
           .Select(c => new PatientOverview {
-              name = c.Name,
+              name = AesEncryption.Decrypt(c.Name, _aesKey),
               cpr = Parser.convertToCpr(c.Birthdate, c.CprKey),
               pronouns = c.Pronouns,
               birthdate = c.Birthdate,
