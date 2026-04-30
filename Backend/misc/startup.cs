@@ -19,13 +19,16 @@ public class Startup
   {
     var startup = new Startup(context, aesKey);
     await startup.HashPasswordsAsync();
+    await startup.Encript_patient_data_Async();
   }
 
   public async Task HashPasswordsAsync()
   {
-    // Salt == "" means not yet hashed — fix the condition
     CUR[] users = _context.Cur
-      .Where(c => string.IsNullOrWhiteSpace(c.Salt) || !c.Salt.StartsWith("$2"))  // was != which would re-hash already hashed passwords
+      .Where(c =>
+        string.IsNullOrWhiteSpace(c.Salt) ||
+        !c.Salt.Trim().StartsWith("$2")
+      )
       .ToArray();
 
     foreach (CUR user in users)
@@ -48,7 +51,8 @@ public class Startup
     foreach (PR pr in users)
     {
 
-      
+      pr.CprKey = AesEncryption.Encrypt(pr.CprKey,_aesKey);
+      pr.Birthdate = AesEncryption.Encrypt(pr.Birthdate,_aesKey);
       
       
       
