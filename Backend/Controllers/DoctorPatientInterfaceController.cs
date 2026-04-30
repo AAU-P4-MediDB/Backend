@@ -115,13 +115,13 @@ namespace Backend.Controllers
       var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
-
+      
 
       return Ok(new
       {
         code = ErrorCodes.Success,
         uuid = user.Uuid,
-        diagnosis = AesEncryption.DecryptList(user.Diagnosis, _aesKey)
+        diagnosis = user.Diagnosis
       });
     }
 
@@ -328,10 +328,10 @@ namespace Backend.Controllers
         diagnosisList = user.Diagnosis;
       }
 
-      var temp = AesEncryption.DecryptList(request.diagnoses, _aesKey);
+
 
       // Add new unknown JSON object
-      diagnosisList.AddRange(temp);
+      diagnosisList.AddRange(request);
 
       // Save back
       user.Diagnosis = diagnosisList;
