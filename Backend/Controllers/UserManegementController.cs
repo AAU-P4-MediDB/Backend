@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 namespace Backend.Controllers
 {
     [ApiController]
-    [Authorize(Policy = "DoctorOnly")]
     [Route("api/um")]
     public class UserManagementController : ControllerBase
     {
