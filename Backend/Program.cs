@@ -48,6 +48,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
   });
 
+
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>
