@@ -12,7 +12,7 @@ public class PR
   public Guid Uuid { get; set; } = Guid.NewGuid();
 
   [Required]
-  [MaxLength(100)]
+  [MaxLength(500)]
   [Column("name")]
   public string Name { get; set; } = null!; //encrypt
 

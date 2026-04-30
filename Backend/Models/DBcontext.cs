@@ -1,12 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Backend.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace Backend.Models
 {
   public class DBcontext : DbContext
   {
-    public DBcontext(DbContextOptions<DBcontext> options) : base(options){} //why is this empty?
-
+    private readonly string _aesKey;
+    
+    
+    public DBcontext(DbContextOptions<DBcontext> options, IConfiguration configuration) : base(options)
+    {
+      _aesKey = configuration["AES_KEY"]
+                ?? throw new InvalidOperationException("AES key not configured");
+    } 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.HasPostgresEnum<PositionType>("position_type");
@@ -31,11 +40,44 @@ namespace Backend.Models
       modelBuilder.Entity<CUR>()
         .Property(p => p.Timeline)
         .HasColumnType("json");
+      var birthdateConverter = new ValueConverter<DateOnly, string>(
+        v => AesEncryption.Encrypt(v.ToString("yyyy-MM-dd"), _aesKey),
+        v => DateOnly.Parse(AesEncryption.Decrypt(v, _aesKey))
+      );
+      var intEncryptConverter = new ValueConverter<int, string>(
+        v => AesEncryption.Encrypt(v.ToString(), _aesKey),
+        v => int.Parse(AesEncryption.Decrypt(v, _aesKey))
+      );
+      
+      
+      
+      
+      var EncryptConverter = new ValueConverter<string, string>(
+        v => AesEncryption.Encrypt(v, _aesKey),
+        v => AesEncryption.Decrypt(v, _aesKey)
+      );
+      
+      modelBuilder.Entity<PR>()
+        .Property(p => p.CprKey)
+        .HasConversion(intEncryptConverter);
+      
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Birthdate)
+        .HasConversion(birthdateConverter);
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Name)
+        .HasConversion(EncryptConverter);
+      
+      
     }
 
     public DbSet<CCR> Ccr { get; set; } = null!;
     public DbSet<CUR> Cur { get; set; } = null!;
     public DbSet<PR> Pr { get; set; } = null!;
     
+    
+    
   }
+  
+ 
 }

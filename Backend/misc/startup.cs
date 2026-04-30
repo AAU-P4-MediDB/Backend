@@ -19,7 +19,6 @@ public class Startup
   {
     var startup = new Startup(context, aesKey);
     await startup.HashPasswordsAsync();
-    await startup.Encript_patient_data_Async();
   }
 
   public async Task HashPasswordsAsync()
@@ -48,10 +47,14 @@ public class Startup
 
     foreach (PR pr in users)
     {
-      pr.Name = AesEncryption.Encrypt(pr.Name,_aesKey);
+
       
       
-      _context.Entry(pr).Property(p => p.Name).IsModified     = true;
+      
+      
+      
+      _context.Entry(pr).Property(p => p.CprKey).IsModified     = true;
+      _context.Entry(pr).Property(p => p.Birthdate).IsModified     = true;
 
     }
     
