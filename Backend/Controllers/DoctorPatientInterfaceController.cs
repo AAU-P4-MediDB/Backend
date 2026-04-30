@@ -121,7 +121,7 @@ namespace Backend.Controllers
       {
         code = ErrorCodes.Success,
         uuid = user.Uuid,
-        diagnosis = AesEncryption.DecryptList(user.Diagnosis, _aesKey)
+        diagnosis = user.Diagnosis
       });
     }
 
@@ -328,10 +328,10 @@ namespace Backend.Controllers
         diagnosisList = user.Diagnosis;
       }
 
-      var temp = AesEncryption.DecryptList(request.diagnoses, _aesKey);
+
 
       // Add new unknown JSON object
-      diagnosisList.AddRange(temp);
+      diagnosisList.AddRange(request);
 
       // Save back
       user.Diagnosis = diagnosisList;

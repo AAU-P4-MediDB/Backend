@@ -50,7 +50,7 @@ namespace Backend.Controllers
                     Weight = request.weight,
                     BioGender = request.bioGender,
                     CprKey = request.cprKey,
-                    Diagnosis = AesEncryption.EncryptList(request.diagnosis, _aesKey),
+                    Diagnosis = request.diagnosis,
                     Vitals = request.vitals,
                     Prescriptions = request.prescriptions,
                     Pfp      = request.pfp,

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Backend.Controllers
 {
     [ApiController]
+    [Authorize(Policy = "DoctorOnly")]
     [Route("api/um")]
     public class UserManagementController : ControllerBase
     {
@@ -86,16 +87,24 @@ namespace Backend.Controllers
                 string.IsNullOrWhiteSpace(request.password)) 
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
-            var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
-
-            var token = _tokenService.GenerateToken(User);
-        
-            return Ok(new
-        
+            var User =  _context.Cur.First(c => c.Email == request.email);
+            
+            if (User == null)
+              return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
+            
+            if (User.Password != hashing.HashPassword(request.password, User.Salt))
             {
+            var token = _tokenService.GenerateToken(User);
+            
+              return Ok(new
+
+              {
                 code = ErrorCodes.Success,
                 jwt_token = token
-            });
+              });
+            }
+
+            return BadRequest();
 
         }
         

@@ -49,10 +49,10 @@ public class Startup
     foreach (PR pr in users)
     {
       pr.Name = AesEncryption.Encrypt(pr.Name,_aesKey);
-      pr.Diagnosis = AesEncryption.EncryptList(pr.Diagnosis,_aesKey);
+      
       
       _context.Entry(pr).Property(p => p.Name).IsModified     = true;
-      _context.Entry(pr).Property(p => p.Diagnosis).IsModified = true;
+
     }
     
     await _context.SaveChangesAsync();
