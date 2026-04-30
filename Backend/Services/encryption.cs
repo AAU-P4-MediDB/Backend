@@ -74,7 +74,4 @@ public static class AesEncryption
         }
         return temp;
     }
-    
-  
-    
 }

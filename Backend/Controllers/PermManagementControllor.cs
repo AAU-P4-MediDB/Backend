@@ -70,12 +70,12 @@ public class PermManagementController : ControllerBase
   [HttpPost("request")]
   public async Task<IActionResult> PermsRequest([FromBody] PermRequest request)
   {
-    string[] cpr = request.pt_cpr.Split('-');
+    int[] cpr = request.pt_cpr.Split('-').Select(int.Parse).ToArray();
 
-    
+    DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
-    var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == cpr[0]);
+    var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
     if (user == null)
       return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
     

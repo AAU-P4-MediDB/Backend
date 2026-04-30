@@ -7,15 +7,15 @@ namespace Backend.Models
 {
   public class DBcontext : DbContext
   {
-    private readonly string _aesKey;
     
+    private readonly string _aesKey;
     
     public DBcontext(DbContextOptions<DBcontext> options, IConfiguration configuration) : base(options)
     {
       _aesKey = configuration["AES_KEY"]
                 ?? throw new InvalidOperationException("AES key not configured");
-    } 
-    
+    } //why is this empty?
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.HasPostgresEnum<PositionType>("position_type");
@@ -42,8 +42,14 @@ namespace Backend.Models
         .HasColumnType("json");
 
       
-      
-      
+      var birthdateConverter = new ValueConverter<DateOnly, string>(
+        v => AesEncryption.Encrypt(v.ToString("yyyy-MM-dd"), _aesKey),
+        v => DateOnly.Parse(AesEncryption.Decrypt(v, _aesKey))
+      );
+      var intEncryptConverter = new ValueConverter<int, string>(
+        v => AesEncryption.Encrypt(v.ToString(), _aesKey),
+        v => int.Parse(AesEncryption.Decrypt(v, _aesKey))
+      );
       
       var EncryptConverter = new ValueConverter<string, string>(
         v => AesEncryption.Encrypt(v, _aesKey),
@@ -51,11 +57,16 @@ namespace Backend.Models
       );
       
       modelBuilder.Entity<PR>()
+        .Property(p => p.CprKey)
+        .HasConversion(intEncryptConverter);
+      
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Birthdate)
+        .HasConversion(birthdateConverter);
+      
+      modelBuilder.Entity<PR>()
         .Property(p => p.Name)
         .HasConversion(EncryptConverter);
-      
-
-      
       
     }
 
@@ -63,9 +74,5 @@ namespace Backend.Models
     public DbSet<CUR> Cur { get; set; } = null!;
     public DbSet<PR> Pr { get; set; } = null!;
     
-    
-    
   }
-  
- 
 }

@@ -28,6 +28,25 @@ builder.Services.AddDbContext<DBcontext>(options =>
 var aesKey = builder.Configuration["AES_KEY"] 
              ?? throw new InvalidOperationException("AES key not configured");
 
+// JWT
+var jwtKey = builder.Configuration["Jwt:Key"] 
+             ?? throw new InvalidOperationException("JWT key is not configured");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+  .AddJwtBearer(options =>
+  {
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+      ValidateIssuer           = true,
+      ValidateAudience         = true,
+      ValidateLifetime         = true,
+      ValidateIssuerSigningKey = true,
+      ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+      ValidAudience            = builder.Configuration["Jwt:Audience"],
+      IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+      ClockSkew                = TimeSpan.Zero   // no grace period on expiry
+    };
+  });
 
 builder.Services.AddAuthorization(options =>
 {
@@ -72,7 +91,6 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = 429;
 });
-
 
 var app = builder.Build();
 

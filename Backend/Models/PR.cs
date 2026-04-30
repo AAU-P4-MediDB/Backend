@@ -12,18 +12,18 @@ public class PR
   public Guid Uuid { get; set; } = Guid.NewGuid();
 
   [Required]
-  [MaxLength(500)]
+  [MaxLength(100)]
   [Column("name")]
   public string Name { get; set; } = null!; //encrypt
 
   [Required]
   [Column("birthdate")]
-  public string Birthdate { get; set; }
+  public DateOnly Birthdate { get; set; }
 
   [Required]
 
   [Column("cpr_key")]
-  public string CprKey { get; set; } //encrypt
+  public int CprKey { get; set; } //encrypt
 
   [Required]
   [Column("bio_gender")]

@@ -32,11 +32,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt)) 
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
       
-      string[] cpr = request.CPR_pt.Split('-');
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == cpr[0]);
+      
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -56,11 +57,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
       
-      string[] cpr = request.CPR_pt.Split('-');
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == cpr[0]);
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -80,12 +82,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
 
-      string[] cpr = request.CPR_pt.Split('-');
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-     
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == cpr[0]);
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -105,11 +107,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
 
-      string[] cpr = request.CPR_pt.Split('-');
-      
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
+
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == cpr[0]);
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -129,12 +132,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
 
-      string[] cpr = request.CPR_pt.Split('-');
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-     
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == cpr[0]);
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -156,10 +159,17 @@ namespace Backend.Controllers
 
       var parts = request.CPR_pt.Split('-');
 
-      
+      if (parts.Length != 2 ||
+          !int.TryParse(parts[0], out var cprDatePart) ||
+          !int.TryParse(parts[1], out var cprKey))
+      {
+        return BadRequest(new { code = ErrorCodes.User.InvalidCpr });
+      }
+
+      DateOnly dateOnly = Parser.Parsebirthdate(cprDatePart);
 
       var user = await _context.Pr
-        .FirstOrDefaultAsync(c => c.CprKey == parts[1] && c.Birthdate == parts[0]);
+        .FirstOrDefaultAsync(c => c.CprKey == cprKey && c.Birthdate == dateOnly);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
@@ -183,12 +193,12 @@ namespace Backend.Controllers
       if (string.IsNullOrWhiteSpace(request.CPR_pt))
         return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
 
-      string[] cpr = request.CPR_pt.Split('-');
+      int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
-      
+      DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == cpr[0]);
+      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -381,12 +391,12 @@ namespace Backend.Controllers
         int day = request.bday / 10000;
         int month = (request.bday / 100) % 100;
         int year = 2000 + (request.bday % 100);
-        user.Birthdate = request.bday.ToString();
+        user.Birthdate = new DateOnly(year, month, day);
       }
 
       if (request.cpr_key != 0)
       {
-        user.CprKey = request.cpr_key.ToString();
+        user.CprKey = request.cpr_key;
       }
 
       if (request.pronouns != null)
@@ -423,7 +433,7 @@ namespace Backend.Controllers
           .Where(c => c.Doctor == doctor_uuid)
           .Select(c => new PatientOverview {
               name = AesEncryption.Decrypt(c.Name, _aesKey),
-              cpr = "c.Birthdate c.CprKey",
+              cpr = Parser.convertToCpr(c.Birthdate, c.CprKey),
               pronouns = c.Pronouns,
               birthdate = c.Birthdate,
               pfp = c.Pfp
