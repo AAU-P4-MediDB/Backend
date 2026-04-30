@@ -279,32 +279,30 @@ namespace Backend.Controllers
     }
     //3.2.3
     [HttpPost("usrup/{uuid}/prescription")]
-    public async Task<ActionResult> Updateprescription(Guid uuid, [FromBody] PrescriptionUpdateRequest request)
+    public async Task<ActionResult> Updateprescription(Guid uuid, [FromBody] presrciptions request)
     {
-      if (request.prescriptions.ValueKind == JsonValueKind.Undefined)
-        return BadRequest(new { code = ErrorCodes.User.MissingRequiredField });
 
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
-      List<JsonElement> prescriptionList;
+      List<presrciptions> prescriptionList;
 
       if (string.IsNullOrEmpty(user.Journal))
       {
-        prescriptionList = new List<JsonElement>();
+        prescriptionList = new List<presrciptions>();
       }
       else
       {
-        prescriptionList = JsonSerializer.Deserialize<List<JsonElement>>(user.Prescriptions);
+        prescriptionList = user.Prescriptions;
       }
-      
-      // Add new unknown JSON object
-      prescriptionList.Add(request.prescriptions);
+
+    // Add new unknown JSON object
+      prescriptionList.Add(request);
 
       // Save back
-      user.Prescriptions = JsonSerializer.Serialize(prescriptionList);
+
 
       await _context.SaveChangesAsync();
 
@@ -312,18 +310,18 @@ namespace Backend.Controllers
     }
     //3.2.4 diagnosis
     [HttpPost("usrup/{uuid}/diagnosis")]
-    public async Task<ActionResult> Updatediagnosis(Guid uuid, [FromBody] DiagnosesUpdateRequest request)
+    public async Task<ActionResult> Updatediagnosis(Guid uuid, [FromBody] diagnosis request)
     {
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
-      List<string> diagnosisList;
+      List<diagnosis> diagnosisList;
 
       if (user.Diagnosis == null || !user.Diagnosis.Any())
       {
-        diagnosisList = new List<string>();
+        diagnosisList = new List<diagnosis>();
       }
       else
       {

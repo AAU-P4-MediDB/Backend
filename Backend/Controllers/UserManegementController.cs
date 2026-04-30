@@ -14,10 +14,12 @@ namespace Backend.Controllers
     public class UserManagementController : ControllerBase
     {
         private readonly DBcontext _context;
+        private readonly TokenService _tokenService;
         
-        public UserManagementController(DBcontext context)
+        public UserManagementController(DBcontext context, TokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
         
         
@@ -85,11 +87,14 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
             
             var User =  _context.Cur.First(c => c.Email == request.email && c.Password == request.password);
+
+            var token = _tokenService.GenerateToken(User);
         
             return Ok(new
         
             {
                 code = ErrorCodes.Success,
+                jwt_token = token
             });
 
         }

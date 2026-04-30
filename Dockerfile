@@ -12,7 +12,6 @@ RUN dotnet publish Backend.csproj \
     --configuration Release \
     --runtime linux-musl-x64 \
     --self-contained false \
-    --no-restore \
     --output /app/publish \
     -p:PublishSingleFile=false \
     -p:UseAppHost=false

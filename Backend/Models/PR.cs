@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
@@ -46,15 +46,15 @@ public class PR
   [Column("height")]
   public short Height { get; set; }
 
-  [Column("diagnosis")]
-  public List<string>? Diagnosis { get; set; } //encrypt
+  [Column("diagnosis", TypeName = "json")]
+  public List<diagnosis>? Diagnosis { get; set; }
 
   [Required]
   [Column("vitals", TypeName = "json")]
   public string Vitals { get; set; } = null!; //encrypt
 
   [Column("prescriptions", TypeName = "json")]
-  public string? Prescriptions { get; set; } //encrypt
+  public List<presrciptions> Prescriptions { get; set; }
 
   [Column("pfp")]
   public string? Pfp { get; set; }

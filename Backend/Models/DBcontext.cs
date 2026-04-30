@@ -22,6 +22,12 @@ namespace Backend.Models
       modelBuilder.Entity<PR>()
         .Property(p => p.LabResults)
         .HasColumnType("json");
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Prescriptions)
+        .HasColumnType("json");
+      modelBuilder.Entity<PR>()
+        .Property(p => p.Diagnosis)
+        .HasColumnType("json");
       modelBuilder.Entity<CUR>()
         .Property(p => p.Timeline)
         .HasColumnType("json");
