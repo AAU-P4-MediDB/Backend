@@ -26,7 +26,7 @@ public class Startup
   {
     // Salt == "" means not yet hashed — fix the condition
     CUR[] users = _context.Cur
-      .Where(c => c.Salt == "")  // was != which would re-hash already hashed passwords
+      .Where(c => string.IsNullOrWhiteSpace(c.Salt) || !c.Salt.StartsWith("$2"))  // was != which would re-hash already hashed passwords
       .ToArray();
 
     foreach (CUR user in users)
@@ -54,6 +54,7 @@ public class Startup
       _context.Entry(pr).Property(p => p.Name).IsModified     = true;
       _context.Entry(pr).Property(p => p.Diagnosis).IsModified = true;
     }
+    
     await _context.SaveChangesAsync();
   }
 }
