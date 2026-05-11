@@ -37,7 +37,9 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
+
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -62,7 +64,9 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
+
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -87,7 +91,9 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
+
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -112,7 +118,9 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
+
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -135,9 +143,9 @@ namespace Backend.Controllers
       int[] cpr = request.CPR_pt.Split('-').Select(int.Parse).ToArray();
 
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -167,9 +175,11 @@ namespace Backend.Controllers
       }
 
       DateOnly dateOnly = Parser.Parsebirthdate(cprDatePart);
+      
+      var cprhash = hashing.HashSHA3_512(cprKey.ToString());
 
       var user = await _context.Pr
-        .FirstOrDefaultAsync(c => c.CprKey == cprKey && c.Birthdate == dateOnly);
+        .FirstOrDefaultAsync(c => c.CprKeyHash == cprhash);
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
@@ -198,7 +208,9 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
 
 
-      var user = _context.Pr.First(c => c.CprKey == cpr[1] && c.Birthdate == dateOnly);
+      var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
+
+      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 

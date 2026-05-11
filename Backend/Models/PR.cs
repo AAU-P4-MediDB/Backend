@@ -79,6 +79,9 @@ public class PR
   [Column("dr_perms", TypeName = "json")]
   public Dictionary<string, int> DrPerms { get; set; } = new();
   
+  [Column("CprKeyHash")]
+  public string CprKeyHash { get; set; }
+  
 
   [Column("dr_perms_requests", TypeName = "json")]
   public List<PermRequest> DrPermRequests { get; set; } = new();
