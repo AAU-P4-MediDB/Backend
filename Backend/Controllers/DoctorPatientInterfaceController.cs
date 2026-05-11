@@ -39,7 +39,7 @@ namespace Backend.Controllers
       
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -66,7 +66,7 @@ namespace Backend.Controllers
       
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -93,7 +93,7 @@ namespace Backend.Controllers
 
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -120,7 +120,7 @@ namespace Backend.Controllers
 
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -145,7 +145,7 @@ namespace Backend.Controllers
       DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
@@ -210,7 +210,7 @@ namespace Backend.Controllers
 
       var cprhash = hashing.HashSHA3_512(cpr[1].ToString());
 
-      var user = _context.Pr.First(c => c.CprKeyHash == cprhash);
+      var user = _context.Pr.FirstOrDefault(c => c.CprKeyHash == cprhash);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
