@@ -14,7 +14,7 @@ namespace Backend.Models
     {
       _aesKey = configuration["AES_KEY"]
                 ?? throw new InvalidOperationException("AES key not configured");
-    } //why is this empty?
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
