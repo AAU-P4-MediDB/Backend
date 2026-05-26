@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -11,15 +11,10 @@ namespace Backend.Controllers;
 public class PermManagementController : ControllerBase
 {
   private readonly DBcontext _context;
-
-  
-  
   public PermManagementController(DBcontext context) 
   {
     _context = context;
-    
   }
-
   // 3.5.1
   [HttpPost("{uuid}/update")]
   public async Task<IActionResult> UpdateDrPerms(Guid uuid, [FromBody] UpdateDrPermsRequest request)

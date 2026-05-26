@@ -444,7 +444,7 @@ namespace Backend.Controllers
         List<PatientOverview> patientOverview = await _context.Pr
           .Where(c => c.Doctor == doctor_uuid)
           .Select(c => new PatientOverview {
-              name = AesEncryption.Decrypt(c.Name, _aesKey),
+              name = c.Name,
               cpr = Parser.convertToCpr(c.Birthdate, c.CprKey),
               pronouns = c.Pronouns,
               birthdate = c.Birthdate,
