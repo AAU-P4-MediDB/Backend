@@ -74,5 +74,7 @@ namespace Backend.Models
     public DbSet<CUR> Cur { get; set; } = null!;
     public DbSet<PR> Pr { get; set; } = null!;
     
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    
   }
 }

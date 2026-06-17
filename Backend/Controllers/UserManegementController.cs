@@ -93,18 +93,77 @@ namespace Backend.Controllers
             
             if (User.Password != hashing.HashPassword(request.password, User.Salt))
             {
-            var token = _tokenService.GenerateToken(User);
-            
-              return Ok(new
+                var token = _tokenService.GenerateToken(User);
+                var refresh = _tokenService.GenerateRefreshToken();
 
-              {
-                code = ErrorCodes.Success,
-                jwt_token = token
-              });
+                _context.RefreshTokens.Add(new RefreshToken
+                {
+                    UserUuid = User.Uuid,
+                    TokenHash = _tokenService.HashRefreshToken(refresh),
+                    Expires = DateTime.UtcNow.AddDays(7)
+                });
+                
+                  return Ok(new
+
+                  {
+                    code = ErrorCodes.Success,
+                    jwt_token = token
+                  });
             }
 
             return BadRequest();
 
+        }
+        
+        
+        //1.1.3 (make)
+        [HttpPost("ac/refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var hash =
+                _tokenService.HashRefreshToken(request.RefreshToken);
+
+
+            var token = await _context.RefreshTokens
+                .FirstOrDefaultAsync(x => x.TokenHash == hash);
+
+
+            if (token == null || !token.IsActive)
+                return Unauthorized();
+
+
+            token.Revoked = DateTime.UtcNow;
+
+
+            var user = await _context.Cur
+                .FirstAsync(x => x.Uuid == token.UserUuid);
+
+
+            var newAccess =
+                _tokenService.GenerateToken(user);
+
+
+            var newRefresh =
+                _tokenService.GenerateRefreshToken();
+
+
+            _context.RefreshTokens.Add(new RefreshToken
+            {
+                UserUuid = user.Uuid,
+                TokenHash =
+                    _tokenService.HashRefreshToken(newRefresh),
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+
+
+            await _context.SaveChangesAsync();
+
+
+            return Ok(new
+            {
+                accessToken = newAccess,
+                refreshToken = newRefresh
+            });
         }
         
         
