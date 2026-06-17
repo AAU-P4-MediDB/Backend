@@ -76,5 +76,10 @@ namespace Backend.Models
     
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     
+    public DbSet<UserMfa> UserMfa { get; set; }
+    public DbSet<UserTotp> UserTotp { get; set; }
+    public DbSet<UserRecoveryCode> UserRecoveryCodes { get; set; }
+    public DbSet<MfaSession> MfaSessions { get; set; }
+    
   }
 }

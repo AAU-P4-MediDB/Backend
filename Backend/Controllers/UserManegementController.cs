@@ -15,11 +15,13 @@ namespace Backend.Controllers
     {
         private readonly DBcontext _context;
         private readonly TokenService _tokenService;
+        private readonly AuthService _auth;
         
-        public UserManagementController(DBcontext context, TokenService tokenService)
+        public UserManagementController(DBcontext context, TokenService tokenService, AuthService auth)
         {
             _context = context;
             _tokenService = tokenService;
+            _auth = auth;
         }
         
         
@@ -80,43 +82,17 @@ namespace Backend.Controllers
         //1.1.2
         [EnableRateLimiting("login")]
         [HttpPost("ac/login")]
-        public async Task<ActionResult> UserLogin([FromBody] UserLoginRequest request)
+        public async Task<ActionResult> UserLogin([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.email) ||
-                string.IsNullOrWhiteSpace(request.password)) 
-                return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
-            
-            var User =  _context.Cur.First(c => c.Email == request.email);
-            
-            if (User == null)
-              return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
-            
-            if (User.Password != hashing.HashPassword(request.password, User.Salt))
-            {
-                var token = _tokenService.GenerateToken(User);
-                var refresh = _tokenService.GenerateRefreshToken();
+            var result = await _auth.Login(request);
 
-                _context.RefreshTokens.Add(new RefreshToken
-                {
-                    UserUuid = User.Uuid,
-                    TokenHash = _tokenService.HashRefreshToken(refresh),
-                    Expires = DateTime.UtcNow.AddDays(7)
-                });
-                
-                  return Ok(new
+            if (result == null)
+                return Unauthorized();
 
-                  {
-                    code = ErrorCodes.Success,
-                    jwt_token = token,
-                    refresh_token = refresh
-                  });
-            }
-
-            return BadRequest();
-
+            return Ok(result);
         }
         
-        
+
         //1.1.3 (make)
         [HttpPost("ac/refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
@@ -167,6 +143,16 @@ namespace Backend.Controllers
             });
         }
         
+        [HttpPost("mfa/verify")]
+        public async Task<IActionResult> Verify(MfaVerifyRequest req)
+        {
+            var result = await _auth.VerifyMfa(req);
+
+            if (result == null)
+                return Unauthorized();
+
+            return Ok(result);
+        }
         
         //1.4
         [HttpPost("{User}/reset")]
