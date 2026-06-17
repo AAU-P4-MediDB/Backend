@@ -49,6 +49,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
   });
 
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddAuthorization(options =>
 {
@@ -106,6 +110,12 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = 429;
 });
 
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.SingleLine = true;
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -134,18 +144,22 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
+app.UseRateLimiter(); // must be before MapControllers
+app.UseCors("FrontendPolicy");
 
 app.Use(async (context, next) =>
 {
-    Console.WriteLine($"[{DateTime.Now}] Request: {context.Request.Method} {context.Request.Path}");
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("HTTP {Method} {Path}",
+        context.Request.Method,
+        context.Request.Path);
+
     await next();
+
+    logger.LogInformation("Response {StatusCode}",
+        context.Response.StatusCode);
 });
-
-
-
-app.UseRateLimiter(); // must be before MapControllers
-app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
