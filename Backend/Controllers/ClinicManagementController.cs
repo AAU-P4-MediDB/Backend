@@ -44,8 +44,12 @@ public class ClinicManagementController : ControllerBase
     [HttpPost("fc")]
     public async Task<ActionResult> FetchClinic([FromBody] FetchClinicRequest request)
     {
-        var clinic =  _context.Ccr.First(c => c.Email == request.email);
-        Console.WriteLine(clinic);
+        var clinic =  _context.Ccr.FirstOrDefault(c => c.Email == request.email);
+
+        if (clinic == null)
+        {
+            return NotFound(new { code = ErrorCodes.User.ClinicNotFound });
+        }
         
         return Ok(new
             {

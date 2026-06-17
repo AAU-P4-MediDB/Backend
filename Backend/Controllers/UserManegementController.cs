@@ -143,7 +143,9 @@ namespace Backend.Controllers
             });
         }
         
-        [HttpPost("mfa/verify")]
+        
+        [EnableRateLimiting("login")]
+        [HttpPost("ac/mfa/verify")]
         public async Task<IActionResult> Verify(MfaVerifyRequest req)
         {
             var result = await _auth.VerifyMfa(req);

@@ -51,8 +51,12 @@ public class LocalAdminManagementController : ControllerBase
   [HttpPost("fetch")]
   public async Task<ActionResult> FetchLocalAdmin([FromBody] FetchClinicRequest request)
   {
-    var LA =  _context.Cur.First(c => c.Email == request.email);
-    Console.WriteLine(LA);
+    var LA =  _context.Cur.FirstOrDefault(c => c.Email == request.email);
+
+    if (LA == null)
+    {
+      return BadRequest(new {code = ErrorCodes.User.UserNotFound});
+    }
         
     return Ok(new
       {

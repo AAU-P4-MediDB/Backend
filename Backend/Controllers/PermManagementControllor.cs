@@ -70,7 +70,7 @@ public class PermManagementController : ControllerBase
     DateOnly dateOnly = Parser.Parsebirthdate(cpr[0]);
       
       
-    var user = _context.Pr.First(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
+    var  user = _context.Pr.FirstOrDefault(c => c.CprKey == cpr[1] &&  c.Birthdate == dateOnly);
     if (user == null)
       return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
     

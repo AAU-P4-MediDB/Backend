@@ -67,6 +67,18 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy
+            .WithOrigins("https://medidb.voxvoltera.com")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 //Global Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
@@ -95,6 +107,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -129,9 +143,12 @@ app.Use(async (context, next) =>
 });
 
 
+
+app.UseRateLimiter(); // must be before MapControllers
+app.UseCors("FrontendPolicy");
+
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
-app.UseRateLimiter(); // must be before MapControllers
 
 app.MapControllers();
 
