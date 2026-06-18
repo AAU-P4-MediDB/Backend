@@ -7,7 +7,7 @@ using System.Text;
 using Backend.Models;
 using Backend.Services;
 using Npgsql;
-
+using Fido2NetLib;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 
@@ -27,6 +27,26 @@ builder.Services.AddDbContext<DBcontext>(options =>
 
 var aesKey = builder.Configuration["AES_KEY"] 
              ?? throw new InvalidOperationException("AES key not configured");
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
+
+//passkey
+builder.Services.AddScoped<PasskeyService>();
+builder.Services.AddSingleton(sp =>
+{
+    var config = new Fido2Configuration
+    {
+        ServerName = "MediDB",
+        ServerDomain = "medidb.voxvoltera.com",
+        Origins = new HashSet<string>
+        {
+            "https://medidb.voxvoltera.com"
+        }
+    };
+
+    return new Fido2(config);
+});
 
 // JWT
 var jwtKey = builder.Configuration["Jwt:Key"] 
@@ -163,7 +183,7 @@ app.Use(async (context, next) =>
 
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
-
+app.UseSession();
 app.MapControllers();
 
 

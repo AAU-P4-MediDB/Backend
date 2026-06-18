@@ -320,6 +320,7 @@ namespace Backend.Controllers
 
       return Ok(new { code = ErrorCodes.Success });
     }
+    
     //3.2.4 diagnosis
     [HttpPost("usrup/{uuid}/diagnosis")]
     public async Task<ActionResult> Updatediagnosis(Guid uuid, [FromBody] diagnosis request)
@@ -340,10 +341,8 @@ namespace Backend.Controllers
         diagnosisList = user.Diagnosis;
       }
 
-
-
-      // Add new unknown JSON object
-      diagnosisList.AddRange(request);
+      
+      diagnosisList.Add(request);
 
       // Save back
       user.Diagnosis = diagnosisList;
