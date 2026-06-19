@@ -68,6 +68,10 @@ namespace Backend.Models
         .Property(p => p.Name)
         .HasConversion(EncryptConverter);
       
+      modelBuilder.Entity<UserTotp>()
+        .Property(p => p.Secret)
+        .HasConversion(EncryptConverter);
+      
     }
 
     public DbSet<CCR> Ccr { get; set; } = null!;

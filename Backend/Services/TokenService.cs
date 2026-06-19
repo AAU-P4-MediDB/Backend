@@ -10,10 +10,12 @@ namespace Backend.Services;
 public class TokenService
 {
   private readonly IConfiguration _config;
+  private readonly DBcontext _context;
 
-  public TokenService(IConfiguration config)
+  public TokenService(IConfiguration config, DBcontext context)
   {
     _config = config;
+    _context = context;
   }
 
   public string GenerateToken(CUR user)
@@ -42,10 +44,18 @@ public class TokenService
     return new JwtSecurityTokenHandler().WriteToken(token);
   }
   
-  public string GenerateRefreshToken()
+  public string GenerateRefreshToken(CUR user)
   {
     var bytes = RandomNumberGenerator.GetBytes(64);
-    return Convert.ToBase64String(bytes);
+    
+    var hash = HashRefreshToken(Convert.ToBase64String(bytes));
+    _context.RefreshTokens.Add(new RefreshToken
+    {
+      UserUuid = user.Uuid,
+      TokenHash = hash,
+      Expires = DateTime.UtcNow.AddDays(7)
+    });
+    return HashRefreshToken(Convert.ToBase64String(bytes));
   }
 
   public string HashRefreshToken(string token)
