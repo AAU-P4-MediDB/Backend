@@ -71,7 +71,7 @@ public class AuthService
     {
       code = ErrorCodes.Success,
       accessToken = _token.GenerateToken(user),
-      refreshToken = _token.GenerateRefreshToken()
+      refreshToken = _token.GenerateRefreshToken(user)
     };
   }
 }

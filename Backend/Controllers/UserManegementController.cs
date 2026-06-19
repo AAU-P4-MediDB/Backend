@@ -121,7 +121,7 @@ namespace Backend.Controllers
 
 
             var newRefresh =
-                _tokenService.GenerateRefreshToken();
+                _tokenService.GenerateRefreshToken(user);
 
 
             _context.RefreshTokens.Add(new RefreshToken

@@ -69,6 +69,7 @@ public class MfaService
 
   public async Task<bool> VerifyRecovery(Guid userUuid, string codeHash)
   {
+    codeHash =hashing.HashSHA3_512(codeHash);
     var record = await _context.UserRecoveryCodes
       .FirstOrDefaultAsync(x =>
         x.UserUuid == userUuid &&
