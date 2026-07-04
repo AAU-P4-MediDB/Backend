@@ -75,6 +75,11 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
+builder.Services.AddHttpClient("yubico", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddAuthorization(options =>

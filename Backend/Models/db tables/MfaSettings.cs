@@ -19,4 +19,7 @@ public class UserMfa
 
   [Column("passkey_enabled")]
   public bool PasskeyEnabled { get; set; } = false;
+
+  [Column("yubikey_enabled")]
+  public bool YubikeyEnabled { get; set; } = false;
 }

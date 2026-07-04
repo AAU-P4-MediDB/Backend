@@ -89,6 +89,9 @@ namespace Backend.Controllers
             if (result == null)
                 return Unauthorized();
 
+            if (result is MfaChallenge challenge)
+                return StatusCode(202, challenge);
+
             return Ok(result);
         }
         
@@ -146,7 +149,7 @@ namespace Backend.Controllers
         
         [EnableRateLimiting("login")]
         [HttpPost("ac/mfa/verify")]
-        public async Task<IActionResult> Verify(MfaVerifyRequest req)
+        public async Task<IActionResult> Verify([FromBody] MfaVerifyRequest req)
         {
             var result = await _auth.VerifyMfa(req);
 

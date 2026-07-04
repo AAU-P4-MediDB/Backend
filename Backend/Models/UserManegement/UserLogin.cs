@@ -6,7 +6,12 @@
 
 public class MfaVerifyRequest
 {
-  public string MfaSession { get; set; } = "";
-  public string? TotpCode { get; set; }
-  public string? RecoveryCode { get; set; }
+  public string MfaToken { get; set; } = "";
+  public string Code { get; set; } = "";
+}
+
+public sealed class MfaChallenge
+{
+  public string MfaToken { get; init; } = "";
+  public List<string> Methods { get; init; } = new();
 }
