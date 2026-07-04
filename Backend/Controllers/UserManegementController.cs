@@ -4,6 +4,7 @@ using Backend.Models;
 using Microsoft.AspNetCore.RateLimiting;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 
 
@@ -16,12 +17,20 @@ namespace Backend.Controllers
         private readonly DBcontext _context;
         private readonly TokenService _tokenService;
         private readonly AuthService _auth;
-        
-        public UserManagementController(DBcontext context, TokenService tokenService, AuthService auth)
+        private readonly MfaService _mfa;
+
+        public UserManagementController(DBcontext context, TokenService tokenService, AuthService auth, MfaService mfa)
         {
             _context = context;
             _tokenService = tokenService;
             _auth = auth;
+            _mfa = mfa;
+        }
+
+        private Guid? GetUserUuid()
+        {
+            var str = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(str, out var guid) ? guid : null;
         }
         
         
@@ -199,6 +208,41 @@ namespace Backend.Controllers
             });
         }
         
+
+        [Authorize]
+        [HttpGet("mfa/yubikey")]
+        public async Task<IActionResult> GetYubikeys()
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var keys = await _mfa.GetYubikeys(userUuid.Value);
+            return Ok(keys.Select(k => new { k.Uuid, k.PublicId, k.Label }));
+        }
+
+        [Authorize]
+        [HttpPost("mfa/yubikey/register")]
+        public async Task<IActionResult> RegisterYubikey([FromBody] YubikeyRegistrationRequest req)
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var (success, error) = await _mfa.RegisterYubikey(userUuid.Value, req.Otp, req.Label);
+            if (!success) return BadRequest(new { error });
+            return Ok(new { code = ErrorCodes.Success });
+        }
+
+        [Authorize]
+        [HttpDelete("mfa/yubikey/{keyUuid}")]
+        public async Task<IActionResult> RemoveYubikey(Guid keyUuid)
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var removed = await _mfa.RemoveYubikey(userUuid.Value, keyUuid);
+            if (!removed) return NotFound();
+            return Ok(new { code = ErrorCodes.Success });
+        }
 
         //1.3
         [Authorize]

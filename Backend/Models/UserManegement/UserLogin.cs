@@ -15,3 +15,9 @@ public sealed class MfaChallenge
   public string MfaToken { get; init; } = "";
   public List<string> Methods { get; init; } = new();
 }
+
+public class YubikeyRegistrationRequest
+{
+  public string Otp { get; set; } = "";
+  public string? Label { get; set; }
+}

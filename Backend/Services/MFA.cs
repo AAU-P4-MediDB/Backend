@@ -50,17 +50,15 @@ public class MfaService
     var token = Convert.ToBase64String(
       RandomNumberGenerator.GetBytes(48));
 
-    var session = new MfaSession
+    _context.MfaSessions.Add(new MfaSession
     {
       UserUuid = userUuid,
       SessionToken = token,
       Expires = DateTime.UtcNow.AddMinutes(5),
       Used = false
-    };
+    });
 
-    _context.MfaSessions.Add(session);
     await _context.SaveChangesAsync();
-
     return token;
   }
 
@@ -92,8 +90,7 @@ public class MfaService
     var record = await _context.UserTotp
       .FirstOrDefaultAsync(x => x.UserUuid == userUuid);
 
-    if (record == null)
-      return false;
+    if (record == null) return false;
 
     var secretBytes = Base32Encoding.ToBytes(record.Secret);
     var totp = new Totp(secretBytes);
@@ -103,26 +100,114 @@ public class MfaService
 
   public async Task<bool> VerifyYubikey(Guid userUuid, string otp)
   {
-    if (!YubikeyOtpPattern.IsMatch(otp))
-      return false;
+    if (!YubikeyOtpPattern.IsMatch(otp)) return false;
 
     var publicId = otp[..12];
 
     var registered = await _context.UserYubikeys
       .AnyAsync(x => x.UserUuid == userUuid && x.PublicId == publicId);
 
-    if (!registered)
-      return false;
+    if (!registered) return false;
 
+    return await CallYubicoApi(otp);
+  }
+
+  public async Task<List<UserYubikey>> GetYubikeys(Guid userUuid)
+  {
+    return await _context.UserYubikeys
+      .Where(x => x.UserUuid == userUuid)
+      .ToListAsync();
+  }
+
+  public async Task<(bool success, string? error)> RegisterYubikey(Guid userUuid, string otp, string? label)
+  {
+    if (!YubikeyOtpPattern.IsMatch(otp))
+      return (false, "Invalid OTP format.");
+
+    var publicId = otp[..12];
+
+    if (await _context.UserYubikeys.AnyAsync(x => x.UserUuid == userUuid && x.PublicId == publicId))
+      return (false, "This YubiKey is already registered.");
+
+    if (!await CallYubicoApi(otp))
+      return (false, "YubiKey validation failed.");
+
+    _context.UserYubikeys.Add(new UserYubikey
+    {
+      UserUuid = userUuid,
+      PublicId = publicId,
+      Label = label
+    });
+
+    var mfa = await _context.UserMfa.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+    if (mfa == null)
+    {
+      _context.UserMfa.Add(new UserMfa { UserUuid = userUuid, YubikeyEnabled = true });
+    }
+    else
+    {
+      mfa.YubikeyEnabled = true;
+    }
+
+    await _context.SaveChangesAsync();
+    return (true, null);
+  }
+
+  public async Task<bool> RemoveYubikey(Guid userUuid, Guid keyUuid)
+  {
+    var key = await _context.UserYubikeys
+      .FirstOrDefaultAsync(x => x.Uuid == keyUuid && x.UserUuid == userUuid);
+
+    if (key == null) return false;
+
+    _context.UserYubikeys.Remove(key);
+    await _context.SaveChangesAsync();
+
+    var hasMore = await _context.UserYubikeys.AnyAsync(x => x.UserUuid == userUuid);
+    if (!hasMore)
+    {
+      var mfa = await _context.UserMfa.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+      if (mfa != null)
+      {
+        mfa.YubikeyEnabled = false;
+        await _context.SaveChangesAsync();
+      }
+    }
+
+    return true;
+  }
+
+  public async Task<bool> VerifyRecovery(Guid userUuid, string code)
+  {
+    var codeHash = hashing.HashSHA3_512(code);
+    var record = await _context.UserRecoveryCodes
+      .FirstOrDefaultAsync(x =>
+        x.UserUuid == userUuid &&
+        x.CodeHash == codeHash &&
+        !x.Used);
+
+    if (record == null) return false;
+
+    record.Used = true;
+    await _context.SaveChangesAsync();
+    return true;
+  }
+
+  public CodeType DetectCodeType(string code)
+  {
+    if (TotpPattern.IsMatch(code)) return CodeType.Totp;
+    if (YubikeyOtpPattern.IsMatch(code)) return CodeType.Yubikey;
+    return CodeType.Recovery;
+  }
+
+  private async Task<bool> CallYubicoApi(string otp)
+  {
     var clientId = _config["Yubico:ClientId"];
     var apiKey = _config["Yubico:ApiKey"];
 
-    if (string.IsNullOrEmpty(clientId))
-      return false;
+    if (string.IsNullOrEmpty(clientId)) return false;
 
-    var nonceBytes = RandomNumberGenerator.GetBytes(16);
-    var nonce = Convert.ToHexString(nonceBytes).ToLower();
-
+    var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLower();
     var queryParams = $"id={clientId}&nonce={nonce}&otp={otp}&sl=secure&timestamp=1";
 
     string url;
@@ -154,31 +239,6 @@ public class MfaService
     {
       return false;
     }
-  }
-
-  public async Task<bool> VerifyRecovery(Guid userUuid, string code)
-  {
-    var codeHash = hashing.HashSHA3_512(code);
-    var record = await _context.UserRecoveryCodes
-      .FirstOrDefaultAsync(x =>
-        x.UserUuid == userUuid &&
-        x.CodeHash == codeHash &&
-        !x.Used);
-
-    if (record == null)
-      return false;
-
-    record.Used = true;
-    await _context.SaveChangesAsync();
-
-    return true;
-  }
-
-  public CodeType DetectCodeType(string code)
-  {
-    if (TotpPattern.IsMatch(code)) return CodeType.Totp;
-    if (YubikeyOtpPattern.IsMatch(code)) return CodeType.Yubikey;
-    return CodeType.Recovery;
   }
 }
 
