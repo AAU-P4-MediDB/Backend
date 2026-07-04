@@ -74,6 +74,7 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>
