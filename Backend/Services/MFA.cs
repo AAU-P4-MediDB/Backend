@@ -250,8 +250,8 @@ public class MfaService
 
   private async Task<bool> CallYubicoApi(string otp)
   {
-    var clientId = _config["Yubico:ClientId"];
-    var apiKey = _config["Yubico:ApiKey"];
+    var clientId = _config["Yubico_ClientId"];
+    var apiKey = _config["Yubico_ApiKey"];
 
     if (string.IsNullOrEmpty(clientId)) return false;
 
