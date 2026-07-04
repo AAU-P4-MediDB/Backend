@@ -23,6 +23,6 @@ public class MfaSession
   [Column("used")]
   public bool Used { get; set; } = false;
 
-  [Column("verified_methods")]
+  [Column("verifiedmethods")]
   public string? VerifiedMethods { get; set; }
 }
