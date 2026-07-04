@@ -197,7 +197,7 @@ namespace Backend.Controllers
         [Authorize]
         [HttpDelete("{User}/del")]
 
-        public async Task<ActionResult> User(Guid User)
+        public async Task<ActionResult> UserDelete(Guid User)
         {
 
             var user = _context.Cur.Find(User);
