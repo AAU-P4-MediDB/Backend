@@ -17,7 +17,7 @@ RUN dotnet publish Backend.csproj \
     -p:UseAppHost=false
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 
 # Create a non-root user to run the app
