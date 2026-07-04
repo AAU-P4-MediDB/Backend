@@ -44,7 +44,7 @@
     
     
     // Prevent caching of sensitive auth/MFA responses
-    if (context.Request.Path.StartsWithSegments("api/um/ac"))
+    if (context.Request.Path.StartsWithSegments("/api/um/ac"))
     {
       headers["Cache-Control"] = "no-store";
       headers["Pragma"] = "no-cache";
