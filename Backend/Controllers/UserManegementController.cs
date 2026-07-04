@@ -210,6 +210,57 @@ namespace Backend.Controllers
         
 
         [Authorize]
+        [HttpGet("mfa/status")]
+        public async Task<IActionResult> GetMfaStatus()
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var methods = await _mfa.GetMethods(userUuid.Value);
+            return Ok(new
+            {
+                totpEnabled = methods.Contains("totp"),
+                yubikeyEnabled = methods.Contains("yubikey")
+            });
+        }
+
+        [Authorize]
+        [HttpGet("mfa/totp/setup")]
+        public async Task<IActionResult> SetupTotp()
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var result = await _mfa.SetupTotp(userUuid.Value);
+            if (result == null) return NotFound();
+
+            return Ok(new { secret = result.Value.secret, otpauthUri = result.Value.otpauthUri });
+        }
+
+        [Authorize]
+        [HttpPost("mfa/totp/confirm")]
+        public async Task<IActionResult> ConfirmTotp([FromBody] TotpConfirmRequest req)
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            var ok = await _mfa.ConfirmTotp(userUuid.Value, req.Secret, req.Code);
+            if (!ok) return BadRequest(new { error = "Invalid code." });
+            return Ok(new { code = ErrorCodes.Success });
+        }
+
+        [Authorize]
+        [HttpDelete("mfa/totp")]
+        public async Task<IActionResult> DisableTotp()
+        {
+            var userUuid = GetUserUuid();
+            if (userUuid == null) return Unauthorized();
+
+            await _mfa.DisableTotp(userUuid.Value);
+            return Ok(new { code = ErrorCodes.Success });
+        }
+
+        [Authorize]
         [HttpGet("mfa/yubikey")]
         public async Task<IActionResult> GetYubikeys()
         {

@@ -21,3 +21,9 @@ public class YubikeyRegistrationRequest
   public string Otp { get; set; } = "";
   public string? Label { get; set; }
 }
+
+public class TotpConfirmRequest
+{
+  public string Secret { get; set; } = "";
+  public string Code { get; set; } = "";
+}

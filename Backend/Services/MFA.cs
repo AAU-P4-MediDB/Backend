@@ -177,6 +177,54 @@ public class MfaService
     return true;
   }
 
+  public async Task<(string secret, string otpauthUri)?> SetupTotp(Guid userUuid)
+  {
+    var user = await _context.Cur.FirstOrDefaultAsync(x => x.Uuid == userUuid);
+    if (user == null) return null;
+
+    var key = KeyGeneration.GenerateRandomKey(20);
+    var base32Secret = Base32Encoding.ToString(key);
+    var uri = $"otpauth://totp/MediDB:{Uri.EscapeDataString(user.Email)}" +
+              $"?secret={base32Secret}&issuer=MediDB&algorithm=SHA1&digits=6&period=30";
+
+    return (base32Secret, uri);
+  }
+
+  public async Task<bool> ConfirmTotp(Guid userUuid, string secret, string code)
+  {
+    var secretBytes = Base32Encoding.ToBytes(secret);
+    var totp = new Totp(secretBytes);
+
+    if (!totp.VerifyTotp(code, out _, new VerificationWindow(2, 2)))
+      return false;
+
+    var existing = await _context.UserTotp.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+    if (existing != null)
+      existing.Secret = secret;
+    else
+      _context.UserTotp.Add(new UserTotp { UserUuid = userUuid, Secret = secret });
+
+    var mfa = await _context.UserMfa.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+    if (mfa == null)
+      _context.UserMfa.Add(new UserMfa { UserUuid = userUuid, TotpEnabled = true });
+    else
+      mfa.TotpEnabled = true;
+
+    await _context.SaveChangesAsync();
+    return true;
+  }
+
+  public async Task DisableTotp(Guid userUuid)
+  {
+    var record = await _context.UserTotp.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+    if (record != null) _context.UserTotp.Remove(record);
+
+    var mfa = await _context.UserMfa.FirstOrDefaultAsync(x => x.UserUuid == userUuid);
+    if (mfa != null) mfa.TotpEnabled = false;
+
+    await _context.SaveChangesAsync();
+  }
+
   public async Task<bool> VerifyRecovery(Guid userUuid, string code)
   {
     var codeHash = hashing.HashSHA3_512(code);
