@@ -33,6 +33,8 @@ builder.Services.AddSession();
 
 //passkey
 builder.Services.AddScoped<PasskeyService>();
+builder.Services.AddScoped<MfaService>();
+builder.Services.AddScoped<RecoveryCodeService>();
 builder.Services.AddSingleton(sp =>
 {
     var config = new Fido2Configuration
@@ -74,6 +76,7 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>
