@@ -22,6 +22,12 @@ public class YubikeyRegistrationRequest
   public string? Label { get; set; }
 }
 
+public sealed class MfaPartialChallenge
+{
+  public string MfaToken { get; init; } = "";
+  public List<string> RemainingMethods { get; init; } = new();
+}
+
 public class TotpConfirmRequest
 {
   public string Secret { get; set; } = "";

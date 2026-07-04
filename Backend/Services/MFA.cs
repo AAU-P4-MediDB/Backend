@@ -12,15 +12,17 @@ public class MfaService
   private readonly DBcontext _context;
   private readonly IHttpClientFactory _httpFactory;
   private readonly IConfiguration _config;
+  private readonly ILogger<MfaService> _logger;
 
   private static readonly Regex YubikeyOtpPattern = new(@"^[cbdefghijklnrtuv]{44}$", RegexOptions.Compiled);
   private static readonly Regex TotpPattern = new(@"^\d{6,8}$", RegexOptions.Compiled);
 
-  public MfaService(DBcontext db, IHttpClientFactory httpFactory, IConfiguration config)
+  public MfaService(DBcontext db, IHttpClientFactory httpFactory, IConfiguration config, ILogger<MfaService> logger)
   {
     _context = db;
     _httpFactory = httpFactory;
     _config = config;
+    _logger = logger;
   }
 
   public async Task<bool> IsEnabled(Guid userUuid)
@@ -62,15 +64,29 @@ public class MfaService
     return token;
   }
 
-  public async Task<Guid?> ValidateSession(string token)
+  public async Task<MfaSession?> GetSession(string token)
   {
-    var session = await _context.MfaSessions
+    return await _context.MfaSessions
       .FirstOrDefaultAsync(x =>
         x.SessionToken == token &&
         !x.Used &&
         x.Expires > DateTime.UtcNow);
+  }
 
+  public async Task<Guid?> ValidateSession(string token)
+  {
+    var session = await GetSession(token);
     return session?.UserUuid;
+  }
+
+  public async Task UpdateVerifiedMethods(string token, string verifiedMethods)
+  {
+    var session = await GetSession(token);
+    if (session != null)
+    {
+      session.VerifiedMethods = verifiedMethods;
+      await _context.SaveChangesAsync();
+    }
   }
 
   public async Task ConsumeSession(string token)
@@ -253,7 +269,11 @@ public class MfaService
     var clientId = _config["Yubico_ClientId"];
     var apiKey = _config["Yubico_ApiKey"];
 
-    if (string.IsNullOrEmpty(clientId)) return false;
+    if (string.IsNullOrEmpty(clientId))
+    {
+      _logger.LogError("Yubico:ClientId is not configured");
+      return false;
+    }
 
     var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLower();
     var queryParams = $"id={clientId}&nonce={nonce}&otp={otp}&sl=secure&timestamp=1";
@@ -269,6 +289,7 @@ public class MfaService
     }
     else
     {
+      _logger.LogWarning("Yubico:ApiKey is not configured — sending unsigned request");
       url = $"https://api.yubico.com/wsapi/2.0/verify?{queryParams}";
     }
 
@@ -281,10 +302,13 @@ public class MfaService
         .FirstOrDefault(l => l.StartsWith("status="))
         ?.Split('=')[1]
         ?.Trim();
+
+      _logger.LogInformation("Yubico API status: {Status}", status);
       return status == "OK";
     }
-    catch
+    catch (Exception ex)
     {
+      _logger.LogError(ex, "Yubico API call failed");
       return false;
     }
   }

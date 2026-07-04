@@ -43,27 +43,53 @@ public class AuthService
 
   public async Task<object?> VerifyMfa(MfaVerifyRequest req)
   {
-    var userId = await _mfa.ValidateSession(req.MfaToken);
+    var session = await _mfa.GetSession(req.MfaToken);
+    if (session == null) return null;
 
-    if (userId == null)
-      return null;
-
-    var user = await _context.Cur.FirstAsync(x => x.Uuid == userId);
+    var user = await _context.Cur.FirstAsync(x => x.Uuid == session.UserUuid);
 
     var codeType = _mfa.DetectCodeType(req.Code);
     bool ok = codeType switch
     {
-      CodeType.Totp    => await _mfa.VerifyTotp(userId.Value, req.Code),
-      CodeType.Yubikey => await _mfa.VerifyYubikey(userId.Value, req.Code),
-      _                => await _mfa.VerifyRecovery(userId.Value, req.Code),
+      CodeType.Totp    => await _mfa.VerifyTotp(session.UserUuid, req.Code),
+      CodeType.Yubikey => await _mfa.VerifyYubikey(session.UserUuid, req.Code),
+      _                => await _mfa.VerifyRecovery(session.UserUuid, req.Code),
     };
 
-    if (!ok)
-      return null;
+    if (!ok) return null;
 
-    await _mfa.ConsumeSession(req.MfaToken);
+    // Recovery codes bypass all factor requirements immediately
+    if (codeType == CodeType.Recovery)
+    {
+      await _mfa.ConsumeSession(req.MfaToken);
+      return IssueTokens(user);
+    }
 
-    return IssueTokens(user);
+    var methodName = codeType == CodeType.Totp ? "totp" : "yubikey";
+
+    var verified = (session.VerifiedMethods ?? "")
+      .Split(',', StringSplitOptions.RemoveEmptyEntries)
+      .ToHashSet();
+    verified.Add(methodName);
+
+    var mfaRecord = await _context.UserMfa.FirstOrDefaultAsync(x => x.UserUuid == session.UserUuid);
+    var required = new HashSet<string>();
+    if (mfaRecord?.TotpEnabled == true)    required.Add("totp");
+    if (mfaRecord?.YubikeyEnabled == true) required.Add("yubikey");
+
+    if (required.IsSubsetOf(verified))
+    {
+      await _mfa.ConsumeSession(req.MfaToken);
+      return IssueTokens(user);
+    }
+
+    await _mfa.UpdateVerifiedMethods(req.MfaToken, string.Join(',', verified));
+
+    return new MfaPartialChallenge
+    {
+      MfaToken = req.MfaToken,
+      RemainingMethods = required.Except(verified).ToList()
+    };
   }
 
   private object IssueTokens(CUR user)

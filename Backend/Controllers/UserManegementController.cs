@@ -168,6 +168,9 @@ namespace Backend.Controllers
             if (result == null)
                 return Unauthorized();
 
+            if (result is MfaPartialChallenge)
+                return StatusCode(202, result);
+
             return Ok(result);
         }
         
