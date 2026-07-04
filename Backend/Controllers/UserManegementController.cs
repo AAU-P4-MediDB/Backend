@@ -29,7 +29,10 @@ namespace Backend.Controllers
 
         private Guid? GetUserUuid()
         {
-            var str = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // JsonWebTokenHandler (.NET 8 default) keeps "sub" as-is;
+            // JwtSecurityTokenHandler maps it to ClaimTypes.NameIdentifier — try both.
+            var str = User.FindFirstValue("sub")
+                   ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
             return Guid.TryParse(str, out var guid) ? guid : null;
         }
         
