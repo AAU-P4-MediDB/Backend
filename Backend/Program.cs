@@ -119,15 +119,26 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>
         policy.RequireClaim("position", "Doctor"));
-    
+
+    // Claim values must match PositionType.ToString() exactly (set at login
+    // in TokenService.GenerateToken) — "secretary" is lowercase on the enum
+    // itself, and the admin positions carry an underscore. Previously these
+    // policies compared against values ("Secretary", "SystemAdministrator",
+    // "LocalAdministrator") that never appear in a real token, so nobody —
+    // including actual admins — could ever satisfy them.
     options.AddPolicy("SecretaryOnly", policy =>
-        policy.RequireClaim("position", "Secretary"));
+        policy.RequireClaim("position", "secretary"));
 
     options.AddPolicy("AdminOnly", policy =>
-        policy.RequireClaim("position", "SystemAdministrator", "LocalAdministrator"));
+        policy.RequireClaim("position", "System_administrator", "Local_administrator"));
+
+    // Spec (4.2): local-admin management must be restricted to sysadmins
+    // specifically, not local admins too.
+    options.AddPolicy("SystemAdminOnly", policy =>
+        policy.RequireClaim("position", "System_administrator"));
 
     options.AddPolicy("ClinicStaff", policy =>
-        policy.RequireClaim("position", "Doctor", "Nurse", "Secretary"));
+        policy.RequireClaim("position", "Doctor", "Nurse", "secretary", "Local_administrator", "System_administrator"));
 });
 
 builder.Services.AddControllers();

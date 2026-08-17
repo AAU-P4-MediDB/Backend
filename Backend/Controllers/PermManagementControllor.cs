@@ -84,8 +84,15 @@ public class PermManagementController : ControllerBase
     });
   }
 
-  // Doctors at the caller's own clinic, excluding the caller — used to
-  // populate the "share with" dropdown on the permissions page.
+  // Doctors who share a clinic with one of the caller's own patients,
+  // excluding the caller — used to populate the "share with" dropdown on
+  // the permissions page. This mirrors PatientRegistration's own notion of
+  // "colleague" (Backend/Backend/Controllers/PatientManagementController.cs),
+  // which seeds a new patient's DrPerms from staff sharing the *patient's*
+  // clinic — not the registering doctor's own CUR.Clinic. Those two aren't
+  // guaranteed to match (a doctor can be assigned patients from a clinic
+  // other than the one on their own staff record), so filtering by the
+  // caller's own CUR.Clinic would wrongly hide real colleagues.
   [HttpGet("doctors")]
   public async Task<IActionResult> FetchClinicDoctors()
   {
@@ -93,14 +100,16 @@ public class PermManagementController : ControllerBase
     if (callerUuid == null)
       return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
 
-    var caller = await _context.Cur.FindAsync(callerUuid.Value);
-    if (caller == null)
-      return NotFound(new { code = ErrorCodes.User.UserNotFound });
+    var myPatientClinics = await _context.Pr
+      .Where(p => p.Doctor == callerUuid)
+      .Select(p => p.Clinic)
+      .Distinct()
+      .ToListAsync();
 
     var doctors = await _context.Cur
-      .Where(c => c.Clinic == caller.Clinic
-                  && c.Position == PositionType.Doctor
-                  && c.Uuid != callerUuid)
+      .Where(c => c.Position == PositionType.Doctor
+                  && c.Uuid != callerUuid
+                  && myPatientClinics.Contains(c.Clinic))
       .Select(c => new
       {
         uuid = c.Uuid,

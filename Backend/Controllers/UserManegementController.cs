@@ -71,6 +71,7 @@ namespace Backend.Controllers
         
         //1.1.1
         // optimal
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost("ac/register")]
         public async Task<ActionResult> UserRegistration([FromBody] UserRegistrationRequest request)
         {
@@ -214,7 +215,7 @@ namespace Backend.Controllers
         }
 
         //1.4
-        [Authorize]
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost("{User}/reset")]
 
         public async Task<ActionResult> UserPassWordReset([FromBody] UserPassWordResetRequest request,Guid User)
@@ -240,13 +241,16 @@ namespace Backend.Controllers
         
         
         // 1.2
-        [Authorize]
+        [Authorize(Policy = "AdminOnly")]
         [HttpDelete("{User}/del")]
 
         public async Task<ActionResult> UserDelete(Guid User)
         {
 
             var user = _context.Cur.Find(User);
+            if (user == null)
+                return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
             _context.Cur.Remove(user);
 
             await _context.SaveChangesAsync();

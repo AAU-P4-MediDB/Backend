@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Backend.Controllers;
 
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SystemAdminOnly")]
 [ApiController]
 [Route("api/sudo/lam")]
 public class LocalAdminManagementController : ControllerBase
@@ -17,12 +17,14 @@ public class LocalAdminManagementController : ControllerBase
   {
     _context = context;
   }
-  
-  
+
+
   //4.2.1
   [HttpPost("create")]
   public async Task<ActionResult> CreateLocalAdmin([FromBody] CreateLocalAdminRequest request)
   {
+    string salt = hashing.GenerateSalt();
+
     var LA = new CUR
     {
       Name = request.name,
@@ -31,14 +33,14 @@ public class LocalAdminManagementController : ControllerBase
       Position = request.position,
       Pfp = request.pfp,
       Clinic = request.clinic,
-      Password = request.password,
-      Salt     = string.Empty,
+      Password = hashing.HashPassword(request.password, salt),
+      Salt     = salt,
     };
-        
+
     _context.Cur.Add(LA);
     await _context.SaveChangesAsync();
     Console.WriteLine(LA);
-        
+
     return Ok(new
       {
         code = ErrorCodes.Success,
@@ -77,8 +79,10 @@ public class LocalAdminManagementController : ControllerBase
   public async Task<ActionResult> RemoveLocalAdmin(Guid uuid)
   {
     var LA =  _context.Cur.Find(uuid);
+    if (LA == null)
+      return NotFound(new { code = ErrorCodes.User.UserNotFound });
     Console.WriteLine(LA);
-        
+
     _context.Cur.Remove(LA);
     await _context.SaveChangesAsync();
         
