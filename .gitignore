@@ -17,3 +17,5 @@ appsettings.Development.json
 bin
 obj
 Backend_p4.sln
+test_nfr.env
+nfr_results.md
