@@ -103,7 +103,10 @@ namespace Backend.Controllers
                     Phone    = request.phone,
                     Clinic   = request.clinic,
                     Position = request.position,
-                    Pfp      = request.pfp
+                    Pfp      = request.pfp,
+                    // Timeline is a NOT NULL json column with no default —
+                    // omitting it fails every registration with a DB write error.
+                    Timeline = new List<TimeLine>()
                 };
                 
 
@@ -372,6 +375,9 @@ namespace Backend.Controllers
                         .Where(c => c.Uuid == parsedUuid)
                         .FirstOrDefaultAsync();
 
+                    if (user == null)
+                        return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
                     return Ok(new
                     {
                         code = ErrorCodes.Success,
@@ -385,12 +391,15 @@ namespace Backend.Controllers
                 }
 
                 return BadRequest(new {code = ErrorCodes.Misc.InvalidUuidFormat, message = "Invalid uuid format." });
-            } 
+            }
             if (request.email != null)
             {
                 var user = await _context.Cur
                     .Where(c => c.Email == request.email)
                     .FirstOrDefaultAsync();
+
+                if (user == null)
+                    return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
                 return Ok(new
                 {

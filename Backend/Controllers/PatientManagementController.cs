@@ -34,6 +34,14 @@ namespace Backend.Controllers
                )
                 return BadRequest(new
                     { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
+
+            // The DB rejects height <= 0 via a check constraint — validate it
+            // here first so the caller gets a clear reason instead of a raw
+            // database error.
+            if (request.height <= 0)
+                return BadRequest(new
+                    { code = ErrorCodes.User.InvalidFieldFormat, message = "Height must be a positive value." });
+
             Guid[] clinicStaffGuid = await _context.Cur
                 .Where(c => c.Clinic == request.clinic)
                 .Select(c => c.Uuid)
@@ -49,6 +57,7 @@ namespace Backend.Controllers
                     Clinic = request.clinic,
                     Birthdate = request.birthdate,
                     Weight = request.weight,
+                    Height = request.height,
                     BioGender = request.bioGender,
                     CprKey = request.cprKey,
                     // Every CPR-based lookup (usrfet/*, permissions, etc.) finds a
@@ -61,7 +70,12 @@ namespace Backend.Controllers
                     // instead of letting the insert fail with a DB write error.
                     Vitals = string.IsNullOrWhiteSpace(request.vitals) ? "[]" : request.vitals,
                     Journal = "[]",
-                    Prescriptions = request.prescriptions,
+                    // Same story as Vitals/Journal: these are non-nullable list
+                    // columns with no default, aren't collected at registration,
+                    // and request.prescriptions is null unless a caller sends it.
+                    Prescriptions = request.prescriptions ?? new List<presrciptions>(),
+                    Appointments = new List<CalenderData>(),
+                    LabResults = new List<LabResults>(),
                     Pfp = request.pfp,
                     DrPerms = perms.CreateStartPerms(clinicStaffGuid)
                 };
@@ -76,11 +90,16 @@ namespace Backend.Controllers
             }
             catch (DbUpdateException ex)
             {
+                // The client only gets a generic message (avoid leaking schema/query
+                // details), but the real Postgres error — usually in InnerException —
+                // is what actually explains a write failure like this.
+                Console.WriteLine("PatientRegistration DbUpdateException: " + ex);
                 return StatusCode(500,
                     new { code = ErrorCodes.App.DatabaseWriteFailure, message = "Database write failure." });
             }
             catch (Exception ex)
             {
+                Console.WriteLine("PatientRegistration Exception: " + ex);
                 return StatusCode(500,
                     new { code = ErrorCodes.App.InternalServerError, message = "Internal server error." });
             }
