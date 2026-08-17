@@ -23,7 +23,14 @@ dataSourceBuilder.EnableDynamicJson();
 var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<DBcontext>(options =>
-    options.UseNpgsql(dataSource));
+    options
+        .UseNpgsql(dataSource)
+        .EnableDetailedErrors()
+        .EnableSensitiveDataLogging()
+        .LogTo(
+            Console.WriteLine,
+            LogLevel.Information
+        ));
 
 var aesKey = builder.Configuration["AES_KEY"] 
              ?? throw new InvalidOperationException("AES key not configured");
@@ -72,7 +79,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
+builder.Logging.ClearProviders();
+
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.SingleLine = true;
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+});
+
+builder.Logging.AddDebug();
 builder.Logging.AddDebug();
 
 builder.Services.AddHttpClient("yubico", client =>
@@ -138,13 +153,15 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = 429;
 });
 
-builder.Logging.AddSimpleConsole(options =>
-{
-    options.SingleLine = true;
-    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
-});
 
 var app = builder.Build();
+
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+
+startupLogger.LogInformation("====================================");
+startupLogger.LogInformation("APPLICATION STARTED");
+startupLogger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
+startupLogger.LogInformation("====================================");
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
@@ -172,9 +189,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseRateLimiter(); // must be before MapControllers
-app.UseCors("FrontendPolicy");
-
 app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -188,6 +202,11 @@ app.Use(async (context, next) =>
     logger.LogInformation("Response {StatusCode}",
         context.Response.StatusCode);
 });
+
+
+app.UseRateLimiter(); // must be before MapControllers
+app.UseCors("FrontendPolicy");
+
 
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
