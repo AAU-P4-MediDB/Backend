@@ -18,13 +18,45 @@ namespace Backend.Controllers
         private readonly TokenService _tokenService;
         private readonly AuthService _auth;
         private readonly MfaService _mfa;
+        private readonly IConfiguration _config;
 
-        public UserManagementController(DBcontext context, TokenService tokenService, AuthService auth, MfaService mfa)
+        public UserManagementController(DBcontext context, TokenService tokenService, AuthService auth, MfaService mfa, IConfiguration config)
         {
             _context = context;
             _tokenService = tokenService;
             _auth = auth;
             _mfa = mfa;
+            _config = config;
+        }
+
+        // NFR-04: the session cookie must be Secure, HttpOnly and
+        // SameSite=Strict. Both tokens are still returned in the JSON body
+        // too (existing clients read them from there) — but the cookie is
+        // now a real, correctly-flagged credential a client can rely on
+        // instead, since Program.cs's JWT bearer handler also accepts the
+        // accessToken cookie as a fallback when there's no Authorization
+        // header.
+        private void SetAuthCookies(string accessToken, string refreshToken)
+        {
+            var accessExpiryMinutes = double.Parse(_config["Jwt:ExpiryMinutes"]!);
+
+            Response.Cookies.Append("accessToken", accessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddMinutes(accessExpiryMinutes)
+            });
+
+            Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Path = "/api/um/ac/refresh",
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            });
         }
 
         private Guid? GetUserUuid()
@@ -104,6 +136,9 @@ namespace Backend.Controllers
             if (result is MfaChallenge challenge)
                 return StatusCode(202, challenge);
 
+            if (result is TokenResult tokens)
+                SetAuthCookies(tokens.AccessToken, tokens.RefreshToken);
+
             return Ok(result);
         }
         
@@ -150,6 +185,7 @@ namespace Backend.Controllers
 
             await _context.SaveChangesAsync();
 
+            SetAuthCookies(newAccess, newRefresh);
 
             return Ok(new
             {
@@ -171,9 +207,12 @@ namespace Backend.Controllers
             if (result is MfaPartialChallenge)
                 return StatusCode(202, result);
 
+            if (result is TokenResult tokens)
+                SetAuthCookies(tokens.AccessToken, tokens.RefreshToken);
+
             return Ok(result);
         }
-        
+
         //1.4
         [Authorize]
         [HttpPost("{User}/reset")]

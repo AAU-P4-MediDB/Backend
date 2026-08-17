@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Backend.Controllers;
 
@@ -11,10 +12,18 @@ namespace Backend.Controllers;
 public class PermManagementController : ControllerBase
 {
   private readonly DBcontext _context;
-  public PermManagementController(DBcontext context) 
+  public PermManagementController(DBcontext context)
   {
     _context = context;
   }
+
+  private Guid? GetUserUuid()
+  {
+    var str = User.FindFirstValue("sub")
+           ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+    return Guid.TryParse(str, out var guid) ? guid : null;
+  }
+
   // 3.5.1
   [HttpPost("{uuid}/update")]
   public async Task<IActionResult> UpdateDrPerms(Guid uuid, [FromBody] UpdateDrPermsRequest request)
@@ -24,7 +33,13 @@ public class PermManagementController : ControllerBase
     if (pr == null)
       return NotFound();
 
- 
+    // Only the patient's own assigned doctor may grant/revoke access to other doctors.
+    var callerUuid = GetUserUuid();
+    if (callerUuid == null)
+      return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+    if (pr.Doctor != callerUuid)
+      return StatusCode(403, new { code = ErrorCodes.Security.Forbidden, message = "Only the assigned doctor can manage permissions for this patient." });
 
     // Apply updates dynamically
     foreach (var (doctorId, permInt) in request.Updates)
@@ -53,11 +68,53 @@ public class PermManagementController : ControllerBase
     if (pr == null)
       return NotFound();
 
+    // Only the patient's own assigned doctor may see who else has been granted access.
+    var callerUuid = GetUserUuid();
+    if (callerUuid == null)
+      return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+    if (pr.Doctor != callerUuid)
+      return StatusCode(403, new { code = ErrorCodes.Security.Forbidden, message = "Only the assigned doctor can view permissions for this patient." });
+
     return Ok(new
     {
       code = ErrorCodes.Success,
       message = "Permissions fetched",
       drPerms = pr.DrPerms,
+    });
+  }
+
+  // Doctors at the caller's own clinic, excluding the caller — used to
+  // populate the "share with" dropdown on the permissions page.
+  [HttpGet("doctors")]
+  public async Task<IActionResult> FetchClinicDoctors()
+  {
+    var callerUuid = GetUserUuid();
+    if (callerUuid == null)
+      return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+    var caller = await _context.Cur.FindAsync(callerUuid.Value);
+    if (caller == null)
+      return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
+    var doctors = await _context.Cur
+      .Where(c => c.Clinic == caller.Clinic
+                  && c.Position == PositionType.Doctor
+                  && c.Uuid != callerUuid)
+      .Select(c => new
+      {
+        uuid = c.Uuid,
+        name = c.Name,
+        email = c.Email,
+        position = c.Position.ToString(),
+        clinic = c.Clinic,
+      })
+      .ToListAsync();
+
+    return Ok(new
+    {
+      code = ErrorCodes.Success,
+      doctors,
     });
   }
 
@@ -88,8 +145,15 @@ public class PermManagementController : ControllerBase
   [HttpGet("request/get/{uuid}")]
   public async Task<IActionResult> FetchDrPermsRequests(Guid uuid)
   {
+    // The caller's own identity is authoritative, not the URL parameter,
+    // so a doctor cannot read another doctor's pending permission requests
+    // by guessing their uuid.
+    var callerUuid = GetUserUuid();
+    if (callerUuid == null)
+      return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
     var dataArr = await _context.Pr
-      .Where(c => c.Doctor == uuid)
+      .Where(c => c.Doctor == callerUuid)
       .Select(c => c.DrPermRequests)
       .ToListAsync();
     

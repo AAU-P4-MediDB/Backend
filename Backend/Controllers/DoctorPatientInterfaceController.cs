@@ -4,11 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 
 namespace Backend.Controllers
 {
-  
+
   [Authorize(Policy = "DoctorOnly")]
   [ApiController]
   [Route("api/dpm")]
@@ -16,14 +17,49 @@ namespace Backend.Controllers
   {
     private readonly DBcontext _context;
     private readonly string _aesKey;
+    private readonly AuditService _audit;
 
-    public DoctorPatientInterfaceController(DBcontext context, IConfiguration config)
+    public DoctorPatientInterfaceController(DBcontext context, IConfiguration config, AuditService audit)
     {
       _context = context;
-      _aesKey = config["AES_KEY"] 
+      _aesKey = config["AES_KEY"]
                 ?? throw new InvalidOperationException("AES key not configured");
+      _audit = audit;
     }
-    
+
+    private Guid? GetUserUuid()
+    {
+      var str = User.FindFirstValue("sub")
+             ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+      return Guid.TryParse(str, out var guid) ? guid : null;
+    }
+
+    // A doctor may access a specific category of a patient's record if
+    // they are the assigned doctor (full access), or if the assigned
+    // doctor has granted them that specific read/write permission bit.
+    private static bool HasPatientAccess(PR patient, Guid callerUuid, PermCategory category, PermAction action)
+    {
+      if (patient.Doctor == callerUuid)
+        return true;
+
+      if (patient.DrPerms == null || !patient.DrPerms.TryGetValue(callerUuid.ToString(), out var permInt))
+        return false;
+
+      return perms.HasCategoryPermission(permInt, category, action);
+    }
+
+    private ActionResult? AuthorizePatientAccess(PR patient, PermCategory category, PermAction action)
+    {
+      var callerUuid = GetUserUuid();
+      if (callerUuid == null)
+        return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+      if (!HasPatientAccess(patient, callerUuid.Value, category, action))
+        return StatusCode(403, new { code = ErrorCodes.Security.Forbidden, message = "You do not have access to this data for this patient." });
+
+      return null;
+    }
+
     //3.1.1
     [HttpPost("usrfet/vitals")]
     public async Task<ActionResult> VitalsFetching([FromBody] ptdataFetchingRequest request)
@@ -43,7 +79,9 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
-      
+      var authError = AuthorizePatientAccess(user, PermCategory.Vitals, PermAction.Read);
+      if (authError != null) return authError;
+
       return Ok(new
       {
         code = ErrorCodes.Success,
@@ -70,7 +108,13 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
-      
+      var authError = AuthorizePatientAccess(user, PermCategory.Journal, PermAction.Read);
+      if (authError != null) return authError;
+
+      var viewerUuid = GetUserUuid();
+      if (viewerUuid != null)
+        await _audit.LogAsync(viewerUuid.Value, user.Uuid, "View", "Journal");
+
       return Ok(new
       {
         code = ErrorCodes.Success,
@@ -97,6 +141,8 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.Prescription, PermAction.Read);
+      if (authError != null) return authError;
 
       return Ok(new
       {
@@ -124,6 +170,8 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.Diagnosis, PermAction.Read);
+      if (authError != null) return authError;
 
       return Ok(new
       {
@@ -149,6 +197,8 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.Appointments, PermAction.Read);
+      if (authError != null) return authError;
 
       return Ok(new
       {
@@ -184,6 +234,9 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.PersonInfo, PermAction.Read);
+      if (authError != null) return authError;
+
       return Ok(new
       {
         code = ErrorCodes.Success,
@@ -214,6 +267,8 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.LabResults, PermAction.Read);
+      if (authError != null) return authError;
 
       return Ok(new
       {
@@ -234,6 +289,9 @@ namespace Backend.Controllers
       var user = await _context.Pr.FirstOrDefaultAsync(u => u.Uuid == uuid);
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
+      var authError = AuthorizePatientAccess(user, PermCategory.Vitals, PermAction.Write);
+      if (authError != null) return authError;
 
       List<JsonElement> vitalsList;
 
@@ -268,6 +326,9 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.Journal, PermAction.Write);
+      if (authError != null) return authError;
+
       List<JsonElement> journalList;
 
       if (string.IsNullOrEmpty(user.Journal))
@@ -287,6 +348,10 @@ namespace Backend.Controllers
 
       await _context.SaveChangesAsync();
 
+      var editorUuid = GetUserUuid();
+      if (editorUuid != null)
+        await _audit.LogAsync(editorUuid.Value, user.Uuid, "Edit", "Journal");
+
       return Ok(new { code = ErrorCodes.Success });
     }
     //3.2.3
@@ -298,6 +363,9 @@ namespace Backend.Controllers
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
+      var authError = AuthorizePatientAccess(user, PermCategory.Prescription, PermAction.Write);
+      if (authError != null) return authError;
 
       List<presrciptions> prescriptionList;
 
@@ -329,6 +397,9 @@ namespace Backend.Controllers
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
+      var authError = AuthorizePatientAccess(user, PermCategory.Diagnosis, PermAction.Write);
+      if (authError != null) return authError;
 
       List<diagnosis> diagnosisList;
 
@@ -362,7 +433,8 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
- 
+      var authError = AuthorizePatientAccess(user, PermCategory.Appointments, PermAction.Write);
+      if (authError != null) return authError;
 
       // Save back
       user.Appointments.Add(request);
@@ -382,6 +454,9 @@ namespace Backend.Controllers
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
+      var authError = AuthorizePatientAccess(user, PermCategory.LabResults, PermAction.Write);
+      if (authError != null) return authError;
+
       user.LabResults.Add(request);
       
       await _context.SaveChangesAsync();
@@ -396,6 +471,9 @@ namespace Backend.Controllers
 
       if (user == null)
         return NotFound(new { code = ErrorCodes.User.UserNotFound });
+
+      var authError = AuthorizePatientAccess(user, PermCategory.PersonInfo, PermAction.Write);
+      if (authError != null) return authError;
 
       if (request.bday != 0)
       {
@@ -439,10 +517,19 @@ namespace Backend.Controllers
 
     public async Task<ActionResult> PatientOverview(Guid doctor_uuid)
     {
-        
+        // The caller's own identity is authoritative, not the URL parameter,
+        // so a doctor cannot list another doctor's patients by guessing their uuid.
+        var callerUuid = GetUserUuid();
+        if (callerUuid == null)
+          return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+        var callerKey = callerUuid.Value.ToString();
+
+        // Patients you're the assigned doctor for.
         List<PatientOverview> patientOverview = await _context.Pr
-          .Where(c => c.Doctor == doctor_uuid)
+          .Where(c => c.Doctor == callerUuid)
           .Select(c => new PatientOverview {
+              uuid = c.Uuid,
               name = c.Name,
               cpr = Parser.convertToCpr(c.Birthdate, c.CprKey),
               pronouns = c.Pronouns,
@@ -450,6 +537,25 @@ namespace Backend.Controllers
               pfp = c.Pfp
               })
               .ToListAsync();
+
+        // Patients another doctor has shared with you. DrPerms is a JSON
+        // column, so it's filtered in memory rather than translated to SQL.
+        var sharedCandidates = await _context.Pr
+          .Where(c => c.Doctor != callerUuid)
+          .ToListAsync();
+
+        patientOverview.AddRange(sharedCandidates
+          .Where(c => c.DrPerms != null
+                      && c.DrPerms.TryGetValue(callerKey, out var permInt)
+                      && perms.HasAnyPermission(permInt))
+          .Select(c => new PatientOverview {
+              uuid = c.Uuid,
+              name = c.Name,
+              cpr = Parser.convertToCpr(c.Birthdate, c.CprKey),
+              pronouns = c.Pronouns,
+              birthdate = c.Birthdate,
+              pfp = c.Pfp
+          }));
 
           return Ok(new
           {
@@ -463,12 +569,18 @@ namespace Backend.Controllers
 
     public async Task<ActionResult> CalendarFetching(Guid uuid)
     {
+      // The caller's own identity is authoritative, not the URL parameter,
+      // so a doctor cannot sync another doctor's calendar by guessing their uuid.
+      var callerUuid = GetUserUuid();
+      if (callerUuid == null)
+        return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
       // flatten JSON arrays
       List<CalenderData> data = new List<CalenderData>();
-      
+
       // fetch all appointments JSON arrays
       var dataArr = await _context.Pr
-        .Where(c => c.Doctor == uuid)
+        .Where(c => c.Doctor == callerUuid)
         .Select(c => c.Appointments)
         .ToListAsync();
       Console.WriteLine(dataArr);
@@ -494,7 +606,15 @@ namespace Backend.Controllers
     [HttpGet("{uuid}/timeline/get")]
     public async Task<ActionResult> TimeLineFetching(Guid uuid)
     {
-      var User = _context.Cur.Find(uuid);
+      // The caller's own identity is authoritative, not the URL parameter,
+      // so a doctor cannot read another doctor's timeline by guessing their uuid.
+      var callerUuid = GetUserUuid();
+      if (callerUuid == null)
+        return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+      var User = _context.Cur.Find(callerUuid.Value);
+      if (User == null)
+        return NotFound(new { code = ErrorCodes.User.UserNotFound });
 
       return Ok(new
       {
@@ -507,7 +627,13 @@ namespace Backend.Controllers
     [HttpPost("{uuid}/timeline/update")]
     public async Task<IActionResult> UpdateTimeline(Guid uuid, [FromBody] TimeLine request)
     {
-      var user = await _context.Cur.FindAsync(uuid);
+      // The caller's own identity is authoritative, not the URL parameter,
+      // so a doctor cannot write to another doctor's timeline by guessing their uuid.
+      var callerUuid = GetUserUuid();
+      if (callerUuid == null)
+        return Unauthorized(new { code = ErrorCodes.Security.Unauthorised, message = "Unauthorized." });
+
+      var user = await _context.Cur.FindAsync(callerUuid.Value);
 
       if (user == null)
         return NotFound();

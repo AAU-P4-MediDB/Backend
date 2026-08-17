@@ -86,6 +86,7 @@ namespace Backend.Models
     public DbSet<MfaSession> MfaSessions { get; set; }
     public DbSet<Passkey> UserPasskeys { get; set; }
     public DbSet<UserYubikey> UserYubikeys { get; set; }
+    public DbSet<AuditLog> AuditLog { get; set; } = null!;
 
   }
 }

@@ -75,6 +75,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
       ClockSkew                = TimeSpan.Zero   // no grace period on expiry
     };
+
+    // NFR-04: accept the accessToken cookie (HttpOnly/Secure/SameSite=Strict,
+    // set by UserManagementController.SetAuthCookies) as a fallback when no
+    // Authorization header is present, so the cookie is a real credential
+    // rather than one nothing ever reads.
+    options.Events = new JwtBearerEvents
+    {
+      OnMessageReceived = context =>
+      {
+        if (string.IsNullOrEmpty(context.Token) &&
+            context.Request.Cookies.TryGetValue("accessToken", out var cookieToken))
+        {
+          context.Token = cookieToken;
+        }
+        return Task.CompletedTask;
+      }
+    };
   });
 
 
@@ -97,6 +114,7 @@ builder.Services.AddHttpClient("yubico", client =>
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AuditService>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy =>

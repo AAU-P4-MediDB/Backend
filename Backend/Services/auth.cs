@@ -92,13 +92,13 @@ public class AuthService
     };
   }
 
-  private object IssueTokens(CUR user)
+  private TokenResult IssueTokens(CUR user)
   {
-    return new
+    return new TokenResult
     {
-      code = ErrorCodes.Success,
-      accessToken = _token.GenerateToken(user),
-      refreshToken = _token.GenerateRefreshToken(user)
+      Code = ErrorCodes.Success,
+      AccessToken = _token.GenerateToken(user),
+      RefreshToken = _token.GenerateRefreshToken(user)
     };
   }
 }
