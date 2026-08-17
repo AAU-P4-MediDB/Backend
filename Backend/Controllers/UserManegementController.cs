@@ -175,15 +175,19 @@ namespace Backend.Controllers
         }
         
         //1.4
+        [Authorize]
         [HttpPost("{User}/reset")]
 
-        public async Task<ActionResult> UserPassWordReset([FromBody] UserPassWordResetRequest request,Guid User_ID)
+        public async Task<ActionResult> UserPassWordReset([FromBody] UserPassWordResetRequest request,Guid User)
         {
             if (string.IsNullOrWhiteSpace(request.email) ||
-                string.IsNullOrWhiteSpace(request.new_pass)) 
+                string.IsNullOrWhiteSpace(request.new_pass))
                 return BadRequest(new { code = ErrorCodes.User.MissingRequiredField, message = "Missing required field." });
 
-            var user = _context.Cur.Find(User_ID);
+            var user = _context.Cur.Find(User);
+
+            if (user == null)
+                return NotFound(new { code = ErrorCodes.User.UserNotFound, message = "User not found." });
 
             user.Password = hashing.HashPassword(request.new_pass, user.Salt);
 
