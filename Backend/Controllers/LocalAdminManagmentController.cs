@@ -36,6 +36,9 @@ public class LocalAdminManagementController : ControllerBase
       Clinic = request.clinic,
       Password = hashing.HashPassword(request.password, salt),
       Salt     = salt,
+      // Timeline is a NOT NULL json column with no default — omitting it
+      // fails every local-admin creation with a DB write error.
+      Timeline = new List<TimeLine>()
     };
 
     _context.Cur.Add(LA);
