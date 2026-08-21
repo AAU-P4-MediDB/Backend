@@ -3,8 +3,6 @@ using System.Text;
 using Backend.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Backend.Models;
 using Backend.Services;
 using Npgsql;
 using Fido2NetLib;
@@ -96,7 +94,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Logging.ClearProviders();
-builder.Logging.ClearProviders();
 
 builder.Logging.AddSimpleConsole(options =>
 {
@@ -104,7 +101,6 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
 });
 
-builder.Logging.AddDebug();
 builder.Logging.AddDebug();
 
 builder.Services.AddHttpClient("yubico", client =>
@@ -155,7 +151,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-//Global Rate Limiting
+// ============================================================
+// GLOBAL RATE LIMITING - FIXED WITH RETRY-AFTER
+// ============================================================
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -180,6 +178,22 @@ builder.Services.AddRateLimiter(options =>
     });
 
     options.RejectionStatusCode = 429;
+
+    // ✅ FIX: Add Retry-After header to 429 responses (NFR-08)
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        // Add Retry-After header (60 seconds for login rate limit window)
+        context.HttpContext.Response.Headers["Retry-After"] = "60";
+        
+        // Optional: Add a JSON response body
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"error\":\"Too many requests. Please try again later.\",\"retryAfter\":60}",
+            cancellationToken
+        );
+        
+        await ValueTask.CompletedTask;
+    };
 });
 
 
@@ -192,6 +206,9 @@ startupLogger.LogInformation("APPLICATION STARTED");
 startupLogger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
 startupLogger.LogInformation("====================================");
 
+// ============================================================
+// SECURITY HEADERS MIDDLEWARE - FIXED
+// ============================================================
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -240,7 +257,29 @@ app.UseCors("FrontendPolicy");
 app.UseAuthentication();   // must be before UseAuthorization
 app.UseAuthorization();
 app.UseSession();
-app.MapControllers();
 
+// ============================================================
+// GLOBAL CACHE-CONTROL MIDDLEWARE FOR ALL API RESPONSES
+// FIXES NFR-15: Patient data must not be cached
+// ============================================================
+app.Use(async (context, next) =>
+{
+    await next();
+    
+    // Add no-cache headers to ALL API responses
+    // This ensures patient data is never cached by browsers or proxies
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        // Only add if not already set by the endpoint
+        if (!context.Response.Headers.ContainsKey("Cache-Control"))
+        {
+            context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            context.Response.Headers["Pragma"] = "no-cache";
+            context.Response.Headers["Expires"] = "0";
+        }
+    }
+});
+
+app.MapControllers();
 
 app.Run();

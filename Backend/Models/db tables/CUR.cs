@@ -54,7 +54,7 @@ public class CUR
   
   [Required]
   [Column("timeline", TypeName = "json")]
-  public List<TimeLine> Timeline { get; set; }
+  public List<TimeLine> Timeline { get; set; } 
 
   // Navigation property
   [ForeignKey("Clinic")]

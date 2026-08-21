@@ -88,7 +88,7 @@ namespace Backend.Controllers
                 return BadRequest(new { code = ErrorCodes.User.InvalidEmailFormat, message = "Invalid email format." });
 
             // Check if email already exists
-            if (await _context.Cur.AnyAsync(u => u.Email == request.email))
+            if (await _context.Cur.FirstOrDefaultAsync(u => u.Email == request.email) != null)
                 return Conflict(new { code = ErrorCodes.User.AlreadyRegistered, message = "User already registered." });
             string salt = hashing.GenerateSalt();
 
@@ -128,7 +128,7 @@ namespace Backend.Controllers
         [EnableRateLimiting("login")]
         [HttpPost("ac/login")]
         public async Task<ActionResult> UserLogin([FromBody] LoginRequest request)
-        {
+        {  
             var result = await _auth.Login(request);
 
             if (result == null)

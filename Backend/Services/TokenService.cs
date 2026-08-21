@@ -30,6 +30,7 @@ public class TokenService
       new Claim("position", user.Position.ToString()),
       new Claim("clinic", user.Clinic.ToString() ?? ""),
       new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+      new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
     };
 
     var token = new JwtSecurityToken(
